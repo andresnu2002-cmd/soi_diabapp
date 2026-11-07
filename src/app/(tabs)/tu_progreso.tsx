@@ -1,10 +1,18 @@
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 
+import RegistrarComida from '@/components/RegistrarComida';
+import RegistrarSueno from '@/components/RegistrarSueno';
+import RegistrarActividad from '@/components/RegistrarActividad';
 
-const { tipo } = useLocalSearchParams<{
-  tipo?: 'alimentacion' | 'sueno' | 'actividad';
-}>();
+import {
+  View,
+  Text,
+  StyleSheet,
+} from 'react-native';
 
+// ============================================
+// PANTALLA DE HÁBITOS
+// ============================================
 
 export default function TuProgresoScreen() {
 
@@ -12,19 +20,63 @@ export default function TuProgresoScreen() {
     tipo?: 'alimentacion' | 'sueno' | 'actividad';
   }>();
 
+  // ============================================
+  // ALIMENTACIÓN
+  // ============================================
+
+  if (tipo === 'alimentacion') {
+    return <RegistrarComida />;
+  }
+
+  // ============================================
+  // SUEÑO
+  // ============================================
+
+  if (tipo === 'sueno') {
+    return <RegistrarSueno />;
+  }
+
+  // ============================================
+  // ACTIVIDAD FÍSICA
+  // ============================================
+
+  if (tipo === 'actividad') {
+    return <RegistrarActividad />;
+  }
+
+  // ============================================
+  // SIN PARÁMETRO
+  // ============================================
+
   return (
-    <>
-      {tipo === 'alimentacion' && (
-        <RegistrarComida />
-      )}
+    <View style={styles.container}>
 
-      {tipo === 'sueno' && (
-        <RegistrarSueno />
-      )}
+      <Text style={styles.text}>
+        Selecciona un hábito desde Progreso.
+      </Text>
 
-      {tipo === 'actividad' && (
-        <RegistrarActividad />
-      )}
-    </>
+    </View>
   );
 }
+
+// ============================================
+// ESTILOS
+// ============================================
+
+const styles = StyleSheet.create({
+
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F4EF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+
+  text: {
+    fontSize: 14,
+    color: '#704832',
+    textAlign: 'center',
+  },
+
+});

@@ -779,10 +779,13 @@ export default function SeguimientoScreen() {
                     backgroundColor: habit.background,
                   },
                 ]}
-                onPress={() => {
-  abrirHabito(
-    habit.id as 'alimentacion' | 'sueno' | 'actividad'
-  );
+onPress={() => {
+  router.push({
+    pathname: '/(tabs)/tu_progreso',
+    params: {
+      tipo: habit.id,
+    },
+  });
 }}
               >
 
@@ -858,7 +861,7 @@ export default function SeguimientoScreen() {
             <Pressable
               style={styles.wellnessButton}
               onPress={() =>
-                router.push('/(tabs)/yo')
+                router.push('/registrar-bienestar')
               }
             >
 
