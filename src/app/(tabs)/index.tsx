@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 
 import {
@@ -6,79 +7,73 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
 // ============================================
-// ESTADOS DE ÁNIMO
+// PALETA DE COLORES S.O.I.
 // ============================================
 
-const moods = [
-  { emoji: '😊', label: 'Bien' },
-  { emoji: '🙂', label: 'Tranquila' },
-  { emoji: '😐', label: 'Normal' },
-  { emoji: '😟', label: 'Preocupada' },
-  { emoji: '😣', label: 'Abrumada' },
+const colors = {
+  background: '#F8F4EF',
+  white: '#FFFFFF',
+  brown: '#704832',
+  terracotta: '#A85F3D',
+  muted: '#B99B86',
+  beige: '#EDE1D4',
+  border: '#E8DDD3',
+  green: '#879B86',
+  paleGreen: '#E7ECE6',
+  text: '#654B3D',
+};
+
+// ============================================
+// PENDIENTES DEL DÍA
+// ============================================
+
+const initialTasks = [
+  {
+    id: 1,
+    title: 'Glucosa en ayunas',
+    subtitle: 'Completado · 7:30 a. m.',
+    completed: true,
+  },
+  {
+    id: 2,
+    title: 'Después del almuerzo',
+    subtitle: 'Próxima medición · 2:30 p. m.',
+    completed: false,
+  },
+  {
+    id: 3,
+    title: 'Vitamina prenatal',
+    subtitle: 'Recordatorio · 8:00 p. m.',
+    completed: false,
+  },
 ];
 
 // ============================================
-// MOMENTOS DE MEDICIÓN
-// ============================================
-
-const moments = [
-  'Mañana',
-  'Antes de comida',
-  'Después de comida',
-  'Noche',
-];
-
-// ============================================
-// PANTALLA PRINCIPAL
+// PANTALLA DE INICIO
 // ============================================
 
 export default function HomeScreen() {
+  const [tasks, setTasks] = useState(initialTasks);
 
-  // Estado de ánimo
-  const [selectedMood, setSelectedMood] = useState('Bien');
+  const completedTasks = tasks.filter(
+    (task) => task.completed
+  ).length;
 
-  // Momento de medición
-  const [selectedMoment, setSelectedMoment] = useState('Mañana');
-
-  // ============================================
-  // NOTAS PARA EL PROFESIONAL
-  // ============================================
-
-  const [notes, setNotes] = useState([
-    'He sentido más cansancio por las tardes.',
-    'Quiero revisar mis mediciones de la mañana.',
-  ]);
-
-  const [newNote, setNewNote] = useState('');
-
-  const [showNoteInput, setShowNoteInput] = useState(false);
-
-  // Función para agregar una nota
-  const addNote = () => {
-
-    if (newNote.trim() !== '') {
-
-      setNotes([...notes, newNote.trim()]);
-
-      setNewNote('');
-
-      setShowNoteInput(false);
-
-    }
-
+  const toggleTask = (id: number) => {
+    setTasks((current) =>
+      current.map((task) =>
+        task.id === id
+          ? { ...task, completed: !task.completed }
+          : task
+      )
+    );
   };
 
-  // ============================================
-  // INTERFAZ
-  // ============================================
-
   return (
-
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
@@ -91,401 +86,313 @@ export default function HomeScreen() {
 
       <View style={styles.header}>
 
-        <View>
+        <View style={styles.headerText}>
+
+          <Text style={styles.date}>
+            MIÉRCOLES, 20 DE MAYO
+          </Text>
 
           <Text style={styles.greeting}>
-            BUENOS DÍAS
+            Buenos días,
           </Text>
 
-          <View style={styles.nameRow}>
+          <Text style={styles.name}>
+            Sofía
+          </Text>
 
-            <Text style={styles.name}>
-              andres
-            </Text>
+          <Text style={styles.subtitle}>
+            Un día más cuidando de ti.
+          </Text>
 
-            <Text style={styles.leaf}>
-              🌿
+        </View>
+
+        <View style={styles.headerActions}>
+
+          <Pressable style={styles.notificationButton}>
+            <Ionicons
+              name="notifications-outline"
+              size={20}
+              color={colors.brown}
+            />
+
+            <View style={styles.notificationDot} />
+          </Pressable>
+
+          <Pressable
+            style={styles.avatar}
+            onPress={() => router.push('/(tabs)/yo')}
+          >
+            <Ionicons
+              name="person"
+              size={21}
+              color={colors.brown}
+            />
+          </Pressable>
+
+        </View>
+
+      </View>
+
+      {/* ===================================== */}
+      {/* MI EMBARAZO */}
+      {/* ===================================== */}
+
+      <Pressable style={styles.pregnancyCard}>
+
+        <Text style={styles.pregnancyLabel}>
+          MI EMBARAZO
+        </Text>
+
+        <Text style={styles.pregnancyText}>
+          Semana 24, día 3
+        </Text>
+
+        <Ionicons
+          name="chevron-forward"
+          size={17}
+          color={colors.brown}
+        />
+
+      </Pressable>
+
+      {/* ===================================== */}
+      {/* MI ÚLTIMA MEDICIÓN */}
+      {/* ===================================== */}
+
+      <View style={styles.measurementCard}>
+
+        <View style={styles.measurementHeader}>
+
+          <Text style={styles.measurementTitle}>
+            Mi última medición
+          </Text>
+
+          <View style={styles.statusBadge}>
+
+            <Ionicons
+              name="checkmark"
+              size={12}
+              color={colors.green}
+            />
+
+            <Text style={styles.statusText}>
+              EN OBJETIVO
             </Text>
 
           </View>
 
         </View>
 
-        <Pressable style={styles.avatar}>
+        <View style={styles.measurementBody}>
 
-          <Ionicons
-            name="person"
-            size={23}
-            color={colors.brown}
-          />
+          <View>
 
-        </Pressable>
+            <View style={styles.glucoseRow}>
 
-      </View>
-
-
-      {/* ===================================== */}
-      {/* SEMANA DE EMBARAZO */}
-      {/* ===================================== */}
-
-      <View style={styles.weekRow}>
-
-        <View style={styles.weekCircle}>
-
-          <Text style={styles.weekNumber}>
-            24
-          </Text>
-
-        </View>
-
-        <View style={styles.weekInfo}>
-
-          <Text style={styles.weekText}>
-            Semana 24 de 40
-          </Text>
-
-          <View style={styles.progressBackground}>
-
-            <View style={styles.progressFill} />
-
-          </View>
-
-        </View>
-
-      </View>
-
-
-      {/* MENSAJE MOTIVACIONAL */}
-
-      <Text style={styles.encouragement}>
-        Hoy también cuenta cómo te sientes. 💛
-      </Text>
-
-
-      {/* ===================================== */}
-      {/* ESTADO DE ÁNIMO */}
-      {/* ===================================== */}
-
-      <View style={styles.card}>
-
-        <Text style={styles.sectionTitle}>
-          ¿CÓMO ESTÁS HOY?
-        </Text>
-
-        <View style={styles.moodRow}>
-
-          {moods.map((mood) => {
-
-            const selected =
-              selectedMood === mood.label;
-
-            return (
-
-              <Pressable
-                key={mood.label}
-                style={styles.moodItem}
-                onPress={() =>
-                  setSelectedMood(mood.label)
-                }
-              >
-
-                <View
-                  style={[
-                    styles.emojiCircle,
-                    selected && styles.selectedEmoji,
-                  ]}
-                >
-
-                  <Text style={styles.emoji}>
-                    {mood.emoji}
-                  </Text>
-
-                </View>
-
-                <Text style={styles.moodLabel}>
-                  {mood.label}
-                </Text>
-
-              </Pressable>
-
-            );
-
-          })}
-
-        </View>
-
-      </View>
-
-
-      {/* ===================================== */}
-      {/* TU SEGUIMIENTO */}
-      {/* ===================================== */}
-
-      <View style={styles.card}>
-
-        <View style={styles.sectionHeader}>
-
-          <Text style={styles.sectionTitle}>
-            TU SEGUIMIENTO
-          </Text>
-
-          <Text style={styles.todayBadge}>
-            Hoy
-          </Text>
-
-        </View>
-
-        <View style={styles.momentGrid}>
-
-          {moments.map((moment) => {
-
-            const selected =
-              selectedMoment === moment;
-
-            return (
-
-              <Pressable
-                key={moment}
-                style={[
-                  styles.momentButton,
-                  selected && styles.momentSelected,
-                ]}
-                onPress={() =>
-                  setSelectedMoment(moment)
-                }
-              >
-
-                <Ionicons
-                  name={
-                    selected
-                      ? 'checkmark-circle'
-                      : 'ellipse-outline'
-                  }
-                  size={18}
-                  color={
-                    selected
-                      ? colors.green
-                      : colors.sand
-                  }
-                />
-
-                <Text style={styles.momentText}>
-                  {moment}
-                </Text>
-
-              </Pressable>
-
-            );
-
-          })}
-
-        </View>
-
-        <Pressable style={styles.primaryButton}>
-
-          <Text style={styles.primaryButtonText}>
-            + Registrar medición
-          </Text>
-
-        </Pressable>
-
-      </View>
-
-
-      {/* ===================================== */}
-      {/* TU PRÓXIMA CITA */}
-      {/* ===================================== */}
-
-      <View style={styles.appointmentCard}>
-
-        <Text style={styles.sectionTitle}>
-          TU PRÓXIMA CITA
-        </Text>
-
-        <View style={styles.appointmentRow}>
-
-          <View style={styles.dateBadge}>
-
-            <Text style={styles.dateMonth}>
-              SEP
-            </Text>
-
-            <Text style={styles.dateDay}>
-              18
-            </Text>
-
-          </View>
-
-          <View style={styles.appointmentInfo}>
-
-            <Text style={styles.appointmentTitle}>
-              Control prenatal
-            </Text>
-
-            <Text style={styles.appointmentSubtitle}>
-              👩‍⚕️ Próxima consulta
-            </Text>
-
-          </View>
-
-        </View>
-
-        <Pressable style={styles.appointmentButton}>
-
-          <Text style={styles.appointmentButtonText}>
-            Prepararme para mi cita
-          </Text>
-
-        </Pressable>
-
-      </View>
-
-
-      {/* ===================================== */}
-      {/* LO QUE QUIERES CONTAR */}
-      {/* NUEVA SECCIÓN */}
-      {/* ===================================== */}
-
-      <View style={styles.notesCard}>
-
-        <Text style={styles.sectionTitle}>
-          LO QUE QUIERES CONTAR
-        </Text>
-
-        <Text style={styles.notesSubtitle}>
-          "Hoy quiero preguntarle a mi profesional..."
-        </Text>
-
-
-        {/* LISTA DE NOTAS */}
-
-        <View style={styles.notesList}>
-
-          {notes.map((note, index) => (
-
-            <View
-              key={index}
-              style={styles.noteItem}
-            >
-
-              <Text style={styles.noteIcon}>
-                ✏️
+              <Text style={styles.glucoseValue}>
+                91
               </Text>
 
-              <Text style={styles.noteText}>
-                {note}
+              <Text style={styles.glucoseUnit}>
+                mg/dL
               </Text>
 
             </View>
+
+            <Text style={styles.measurementType}>
+              En ayunas
+            </Text>
+
+            <Text style={styles.measurementTime}>
+              Ayer, 7:32 a. m.
+            </Text>
+
+          </View>
+
+          {/* GRÁFICA DECORATIVA */}
+
+          <View style={styles.chartContainer}>
+
+            <View style={styles.chartSegment1} />
+            <View style={styles.chartSegment2} />
+            <View style={styles.chartSegment3} />
+            <View style={styles.chartSegment4} />
+
+          </View>
+
+        </View>
+
+      </View>
+
+      {/* ===================================== */}
+      {/* REGISTRAR MI GLUCOSA */}
+      {/* ===================================== */}
+
+      <Pressable
+        style={styles.registerButton}
+        onPress={() => router.push('/registrar-medicion')}
+      >
+
+        <Ionicons
+          name="add"
+          size={20}
+          color={colors.white}
+        />
+
+        <Text style={styles.registerButtonText}>
+          Registrar mi glucosa
+        </Text>
+
+      </Pressable>
+
+      {/* ===================================== */}
+      {/* MIS PENDIENTES */}
+      {/* ===================================== */}
+
+      <View style={styles.tasksSection}>
+
+        <View style={styles.tasksHeader}>
+
+          <View>
+
+            <Text style={styles.sectionEyebrow}>
+              PARA HOY
+            </Text>
+
+            <Text style={styles.tasksTitle}>
+              Mis pendientes
+            </Text>
+
+          </View>
+
+          <Text style={styles.tasksCounter}>
+            {completedTasks} de {tasks.length}
+          </Text>
+
+        </View>
+
+        <View style={styles.tasksCard}>
+
+          {tasks.map((task, index) => (
+
+            <Pressable
+              key={task.id}
+              style={[
+                styles.taskItem,
+                index !== tasks.length - 1 &&
+                  styles.taskBorder,
+              ]}
+              onPress={() => toggleTask(task.id)}
+            >
+
+              <View
+                style={[
+                  styles.taskCircle,
+                  task.completed &&
+                    styles.taskCircleCompleted,
+                ]}
+              >
+
+                {task.completed && (
+                  <Ionicons
+                    name="checkmark"
+                    size={12}
+                    color={colors.white}
+                  />
+                )}
+
+              </View>
+
+              <View style={styles.taskInfo}>
+
+                <Text style={styles.taskTitle}>
+                  {task.title}
+                </Text>
+
+                <Text style={styles.taskSubtitle}>
+                  {task.subtitle}
+                </Text>
+
+              </View>
+
+              {!task.completed && (
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={colors.brown}
+                />
+              )}
+
+            </Pressable>
 
           ))}
 
         </View>
 
+      </View>
 
-        {/* CAMPO PARA NUEVA NOTA */}
+      {/* ===================================== */}
+      {/* PERSONALIZA TU S.O.I. */}
+      {/* ===================================== */}
 
-        {showNoteInput && (
+      <View style={styles.personalizeCard}>
 
-          <TextInput
-            style={styles.noteInput}
-            placeholder="Escribe lo que quieres contar..."
-            placeholderTextColor={colors.muted}
-            value={newNote}
-            onChangeText={setNewNote}
-            multiline
-          />
+        <View style={styles.personalizeContent}>
 
-        )}
-
-
-        {/* BOTÓN AGREGAR NOTA */}
-
-        <Pressable
-          style={styles.addNoteButton}
-          onPress={() => {
-
-            if (!showNoteInput) {
-
-              setShowNoteInput(true);
-
-            } else {
-
-              addNote();
-
-            }
-
-          }}
-        >
-
-          <Text style={styles.addNoteButtonText}>
-
-            {showNoteInput
-              ? 'Guardar nota'
-              : '+ Agregar nota'}
-
+          <Text style={styles.sectionEyebrow}>
+            HAZLO TUYO
           </Text>
 
-        </Pressable>
+          <Text style={styles.personalizeTitle}>
+            Personaliza tu S.O.I.
+          </Text>
+
+          <Text style={styles.personalizeSubtitle}>
+            Elige la funda que más se identifique contigo.
+          </Text>
+
+          <Pressable
+            style={styles.personalizeButton}
+            onPress={() => router.push('/(tabs)/yo')}
+          >
+
+            <Ionicons
+              name="chevron-forward"
+              size={17}
+              color={colors.white}
+            />
+
+          </Pressable>
+
+        </View>
+
+        {/* REPRESENTACIÓN DEL DISPOSITIVO */}
+
+        <View style={styles.deviceContainer}>
+
+          <View style={styles.device}>
+
+            <Text style={styles.deviceText}>
+              S.O.I.
+            </Text>
+
+            <View style={styles.deviceCircle} />
+
+          </View>
+
+        </View>
 
       </View>
 
-
-      {/* ===================================== */}
-      {/* ESPACIO INFERIOR */}
-      {/* ===================================== */}
-
-      <View style={styles.bottomSpace} />
-
     </ScrollView>
-
   );
-
 }
-
-
-// ============================================
-// PALETA DE COLORES S.O.I
-// ============================================
-
-const colors = {
-
-  background: '#F3E8D5',
-
-  white: '#FFFFFF',
-
-  brown: '#6E503D',
-
-  text: '#795B48',
-
-  muted: '#B8A18C',
-
-  sand: '#CDB99D',
-
-  green: '#607E61',
-
-  paleGreen: '#E7EEE4',
-
-  coral: '#C47769',
-
-  border: '#E4D0B7',
-
-  paleYellow: '#FBF4D9',
-
-  yellowBorder: '#EED477',
-
-};
-
 
 // ============================================
 // ESTILOS
 // ============================================
 
 const styles = StyleSheet.create({
-
-  // =====================================
-  // PANTALLA
-  // =====================================
 
   screen: {
     flex: 1,
@@ -494,11 +401,10 @@ const styles = StyleSheet.create({
 
   content: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
-    gap: 16,
+    paddingTop: 25,
+    paddingBottom: 35,
+    gap: 12,
   },
-
 
   // =====================================
   // ENCABEZADO
@@ -507,410 +413,424 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+
+  headerText: {
+    flex: 1,
+  },
+
+  date: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1.3,
+    color: colors.terracotta,
+    marginBottom: 5,
   },
 
   greeting: {
-    color: colors.green,
-    fontSize: 11,
-    letterSpacing: 1.4,
-    fontWeight: '500',
-  },
-
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 2,
+    fontSize: 29,
+    fontFamily: 'serif',
+    color: colors.brown,
+    lineHeight: 31,
   },
 
   name: {
-    color: colors.brown,
-    fontSize: 28,
-    fontStyle: 'italic',
+    fontSize: 31,
     fontFamily: 'serif',
-  },
-
-  leaf: {
-    fontSize: 25,
-  },
-
-  avatar: {
-    width: 43,
-    height: 43,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: colors.sand,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-
-  // =====================================
-  // SEMANA DE EMBARAZO
-  // =====================================
-
-  weekRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    marginTop: 2,
-  },
-
-  weekCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: colors.green,
-    backgroundColor: colors.paleGreen,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  weekNumber: {
-    fontSize: 13,
-    color: colors.green,
-  },
-
-  weekInfo: {
-    flex: 1,
-    gap: 5,
-  },
-
-  weekText: {
-    fontSize: 11,
-    color: colors.text,
-  },
-
-  progressBackground: {
-    width: '48%',
-    height: 5,
-    borderRadius: 4,
-    backgroundColor: '#DDCDB6',
-    overflow: 'hidden',
-  },
-
-  progressFill: {
-    width: '60%',
-    height: '100%',
-    borderRadius: 4,
-    backgroundColor: colors.green,
-  },
-
-  encouragement: {
-    color: colors.text,
-    fontSize: 13,
     fontStyle: 'italic',
-    fontFamily: 'serif',
-    marginBottom: 2,
+    color: colors.terracotta,
+    lineHeight: 34,
   },
 
-
-  // =====================================
-  // TARJETAS GENERALES
-  // =====================================
-
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 20,
-    gap: 18,
-    elevation: 2,
-    shadowColor: '#6E503D',
-    shadowOpacity: 0.07,
-    shadowRadius: 4,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-  },
-
-  sectionTitle: {
+  subtitle: {
     fontSize: 11,
-    fontWeight: '500',
-    letterSpacing: 1.1,
     color: colors.muted,
+    marginTop: 6,
   },
 
-
-  // =====================================
-  // ESTADO DE ÁNIMO
-  // =====================================
-
-  moodRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 3,
-  },
-
-  moodItem: {
-    alignItems: 'center',
-    flex: 1,
-    gap: 8,
-  },
-
-  emojiCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  selectedEmoji: {
-    backgroundColor: colors.paleGreen,
-  },
-
-  emoji: {
-    fontSize: 23,
-  },
-
-  moodLabel: {
-    color: colors.text,
-    fontSize: 9,
-    textAlign: 'center',
-  },
-
-
-  // =====================================
-  // SEGUIMIENTO
-  // =====================================
-
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  todayBadge: {
-    backgroundColor: colors.paleGreen,
-    color: colors.green,
-    fontSize: 11,
-    fontWeight: '600',
-    overflow: 'hidden',
-    borderRadius: 12,
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-  },
-
-  momentGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-
-  momentButton: {
-    width: '48%',
-    minHeight: 44,
-    flexGrow: 1,
-    flexBasis: '40%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 11,
-    paddingVertical: 9,
-  },
-
-  momentSelected: {
-    backgroundColor: colors.paleGreen,
-    borderColor: colors.green,
-  },
-
-  momentText: {
-    flex: 1,
-    fontSize: 11,
-    color: colors.text,
-  },
-
-  primaryButton: {
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: colors.coral,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-
-  primaryButtonText: {
-    color: colors.white,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-
-  // =====================================
-  // PRÓXIMA CITA
-  // =====================================
-
-  appointmentCard: {
-    backgroundColor: colors.paleYellow,
-    borderColor: colors.yellowBorder,
-    borderWidth: 1,
-    borderRadius: 23,
-    padding: 20,
-    gap: 14,
-  },
-
-  appointmentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
-  },
-
-  dateBadge: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#F0D98B',
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  dateMonth: {
-    fontSize: 9,
-    fontWeight: '600',
-    color: colors.brown,
-  },
-
-  dateDay: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.brown,
-  },
-
-  appointmentInfo: {
-    flex: 1,
-    gap: 4,
-  },
-
-  appointmentTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.brown,
-  },
-
-  appointmentSubtitle: {
-    fontSize: 11,
-    color: colors.text,
-  },
-
-  appointmentButton: {
-    minHeight: 43,
-    borderRadius: 12,
-    backgroundColor: colors.brown,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-
-  appointmentButtonText: {
-    color: colors.white,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-
-
-  // =====================================
-  // LO QUE QUIERES CONTAR
-  // =====================================
-
-  notesCard: {
-    backgroundColor: colors.white,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 20,
-    gap: 14,
-
-    elevation: 2,
-    shadowColor: '#6E503D',
-    shadowOpacity: 0.07,
-    shadowRadius: 4,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-  },
-
-  notesSubtitle: {
-    fontSize: 12,
-    color: colors.coral,
-    fontStyle: 'italic',
-    fontFamily: 'serif',
-  },
-
-  notesList: {
-    gap: 8,
-  },
-
-  noteItem: {
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
 
-  noteIcon: {
-    fontSize: 14,
-  },
-
-  noteText: {
-    flex: 1,
-    fontSize: 11,
-    color: colors.text,
-    lineHeight: 17,
-  },
-
-
-  // =====================================
-  // AGREGAR NOTA
-  // =====================================
-
-  addNoteButton: {
-    minHeight: 43,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.sand,
+  notificationButton: {
+    width: 35,
+    height: 35,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.white,
+  },
+
+  notificationDot: {
+    position: 'absolute',
+    top: 6,
+    right: 7,
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.terracotta,
+  },
+
+  avatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.beige,
+    borderWidth: 2,
+    borderColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  addNoteButtonText: {
-    color: colors.coral,
+  // =====================================
+  // MI EMBARAZO
+  // =====================================
+
+  pregnancyCard: {
+    backgroundColor: colors.beige,
+    borderRadius: 13,
+    minHeight: 47,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+
+  pregnancyLabel: {
+    fontSize: 8,
+    color: colors.muted,
+    letterSpacing: 0.5,
+  },
+
+  pregnancyText: {
+    flex: 1,
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.brown,
+  },
+
+  // =====================================
+  // ÚLTIMA MEDICIÓN
+  // =====================================
+
+  measurementCard: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 18,
+    minHeight: 155,
+  },
+
+  measurementHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  measurementTitle: {
     fontSize: 12,
+    fontWeight: '600',
+    color: colors.brown,
+  },
+
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.paleGreen,
+    borderRadius: 20,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+
+  statusText: {
+    fontSize: 8,
+    fontWeight: '600',
+    color: colors.green,
+  },
+
+  measurementBody: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flex: 1,
+    marginTop: 15,
+  },
+
+  glucoseRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 5,
+  },
+
+  glucoseValue: {
+    fontSize: 39,
+    fontFamily: 'serif',
+    color: colors.brown,
+  },
+
+  glucoseUnit: {
+    fontSize: 11,
+    color: colors.muted,
+  },
+
+  measurementType: {
+    fontSize: 11,
+    color: colors.text,
+    marginTop: 2,
+  },
+
+  measurementTime: {
+    fontSize: 9,
+    color: colors.muted,
+    marginTop: 7,
+  },
+
+  // =====================================
+  // GRÁFICA DECORATIVA
+  // =====================================
+
+  chartContainer: {
+    width: 100,
+    height: 45,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+
+  chartSegment1: {
+    width: 25,
+    height: 1,
+    backgroundColor: colors.terracotta,
+    opacity: 0.35,
+    transform: [{ rotate: '-8deg' }],
+  },
+
+  chartSegment2: {
+    width: 25,
+    height: 1,
+    backgroundColor: colors.terracotta,
+    opacity: 0.35,
+    transform: [{ rotate: '12deg' }],
+  },
+
+  chartSegment3: {
+    width: 25,
+    height: 1,
+    backgroundColor: colors.terracotta,
+    opacity: 0.35,
+    transform: [{ rotate: '-10deg' }],
+  },
+
+  chartSegment4: {
+    width: 25,
+    height: 1,
+    backgroundColor: colors.terracotta,
+    opacity: 0.35,
+    transform: [{ rotate: '5deg' }],
+  },
+
+  // =====================================
+  // BOTÓN REGISTRAR
+  // =====================================
+
+  registerButton: {
+    backgroundColor: colors.terracotta,
+    borderRadius: 13,
+    minHeight: 49,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+
+  registerButtonText: {
+    fontSize: 13,
+    color: colors.white,
     fontWeight: '600',
   },
 
-  noteInput: {
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 12,
-    minHeight: 75,
-    fontSize: 12,
-    color: colors.text,
-    textAlignVertical: 'top',
+  // =====================================
+  // MIS PENDIENTES
+  // =====================================
+
+  tasksSection: {
+    marginTop: 10,
+    gap: 10,
   },
 
+  tasksHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+
+  sectionEyebrow: {
+    fontSize: 9,
+    color: colors.terracotta,
+    letterSpacing: 1.3,
+    fontWeight: '700',
+  },
+
+  tasksTitle: {
+    fontSize: 23,
+    fontFamily: 'serif',
+    color: colors.brown,
+  },
+
+  tasksCounter: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.terracotta,
+    marginBottom: 4,
+  },
+
+  tasksCard: {
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+
+  taskItem: {
+    minHeight: 57,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+  },
+
+  taskBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1E9E2',
+  },
+
+  taskCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  taskCircleCompleted: {
+    backgroundColor: colors.green,
+    borderColor: colors.green,
+  },
+
+  taskInfo: {
+    flex: 1,
+    gap: 3,
+  },
+
+  taskTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.brown,
+  },
+
+  taskSubtitle: {
+    fontSize: 9,
+    color: colors.muted,
+  },
 
   // =====================================
-  // ESPACIO INFERIOR
+  // PERSONALIZA TU S.O.I.
   // =====================================
 
-  bottomSpace: {
-    height: 8,
+  personalizeCard: {
+    backgroundColor: colors.beige,
+    borderRadius: 21,
+    padding: 18,
+    minHeight: 160,
+    flexDirection: 'row',
+    marginTop: 12,
+    overflow: 'hidden',
+  },
+
+  personalizeContent: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 7,
+  },
+
+  personalizeTitle: {
+    fontSize: 19,
+    fontFamily: 'serif',
+    color: colors.brown,
+  },
+
+  personalizeSubtitle: {
+    fontSize: 10,
+    color: colors.text,
+    lineHeight: 15,
+    maxWidth: 170,
+  },
+
+  personalizeButton: {
+    width: 31,
+    height: 31,
+    borderRadius: 16,
+    backgroundColor: colors.terracotta,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+
+  // =====================================
+  // DISPOSITIVO S.O.I.
+  // =====================================
+
+  deviceContainer: {
+    width: 85,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  device: {
+    width: 53,
+    height: 95,
+    borderRadius: 26,
+    backgroundColor: '#B16F50',
+    transform: [{ rotate: '15deg' }],
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 7,
+    shadowColor: colors.brown,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: {
+      width: 2,
+      height: 5,
+    },
+  },
+
+  deviceText: {
+    color: colors.white,
+    fontSize: 13,
+    fontFamily: 'serif',
+    letterSpacing: 3,
+    transform: [{ rotate: '90deg' }],
+  },
+
+  deviceCircle: {
+    position: 'absolute',
+    bottom: 10,
+    width: 17,
+    height: 17,
+    borderRadius: 9,
+    backgroundColor: '#DDA889',
   },
 
 });

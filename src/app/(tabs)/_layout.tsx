@@ -1,89 +1,133 @@
-import { colors } from '@/styles/global';
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs, router } from 'expo-router';
+import { Tabs } from 'expo-router';
+
+const colors = {
+  white: '#FFFFFF',
+  terracotta: '#A85F3D',
+  muted: '#B99B86',
+};
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+
+        tabBarLabelPosition: 'below-icon',
+        tabBarShowLabel: true,
+
         tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopColor: colors.surface,
+          backgroundColor: colors.white,
+          borderTopWidth: 1,
+          borderTopColor: '#F0E8DF',
+          height: 75,
+          paddingTop: 0,
+          paddingBottom: 20,
+          elevation: 0,
+          shadowOpacity: 0,
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
+
+        tabBarActiveTintColor: colors.terracotta,
+        tabBarInactiveTintColor: colors.muted,
+
+        tabBarLabelStyle: {
+          fontSize: 9,
+          fontWeight: '400',
+          marginTop: 2,
+        },
+
+        tabBarIconStyle: {
+          marginBottom: 0,
+        },
+
+        tabBarItemStyle: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 0,
+        },
       }}
     >
+
       <Tabs.Screen
         name="index"
         options={{
           title: 'Inicio',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={20}
+              color={color}
+            />
           ),
         }}
       />
 
       <Tabs.Screen
-        name="add-meal"
+        name="seguimiento"
         options={{
-          title: 'Seguimiento',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle" size={size} color={color} />
+          title: 'Progreso',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'stats-chart' : 'stats-chart-outline'}
+              size={20}
+              color={color}
+            />
           ),
         }}
       />
 
-           <Tabs.Screen
+      <Tabs.Screen
         name="cita"
         options={{
-          title: 'Cita',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+          title: 'Resultados',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'document-text' : 'document-text-outline'}
+              size={20}
+              color={color}
+            />
           ),
         }}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
-            router.navigate('/(tabs)/cita');
-          },
-        }}
       />
-
 
       <Tabs.Screen
-        name="meals"
+        name="aprender"
         options={{
           title: 'Aprender',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'book' : 'book-outline'}
+              size={20}
+              color={color}
+            />
           ),
         }}
       />
 
- 
-<Tabs.Screen
-  name="yo"
+      <Tabs.Screen
+        name="yo"
+        options={{
+          title: 'Mis datos',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={20}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+  name="tu_progreso"
   options={{
-    title: 'Yo',
-    tabBarIcon: ({ color, size }) => (
-      <Ionicons name="person-circle" size={size} color={color} />
-    ),
-  }}
-  listeners={{
-    tabPress: (e) => {
-      e.preventDefault();
-      router.navigate('/(tabs)/yo');
-    },
+    href: null,
+    headerShown: false,
   }}
 />
+
     </Tabs>
-
-
-
-
-
-
+    
   );
 }
