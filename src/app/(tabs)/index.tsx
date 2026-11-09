@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { usePregnancy } from '@/app/context/PregnancyContext';
 
 import {
   Pressable,
@@ -57,7 +58,10 @@ const initialTasks = [
 // ============================================
 
 export default function HomeScreen() {
+
   const [tasks, setTasks] = useState(initialTasks);
+
+  const { pregnancy } = usePregnancy();
 
   const completedTasks = tasks.filter(
     (task) => task.completed
@@ -137,23 +141,26 @@ export default function HomeScreen() {
       {/* MI EMBARAZO */}
       {/* ===================================== */}
 
-      <Pressable style={styles.pregnancyCard}>
+  <Pressable
+  style={styles.pregnancyCard}
+  onPress={() => router.push('/mi-embarazo')}
+>
 
-        <Text style={styles.pregnancyLabel}>
-          MI EMBARAZO
-        </Text>
+  <Text style={styles.pregnancyLabel}>
+    MI EMBARAZO
+  </Text>
 
-        <Text style={styles.pregnancyText}>
-          Semana 24, día 3
-        </Text>
+  <Text style={styles.pregnancyText}>
+    Semana {pregnancy.weeks}, día {pregnancy.days}
+  </Text>
 
-        <Ionicons
-          name="chevron-forward"
-          size={17}
-          color={colors.brown}
-        />
+  <Ionicons
+    name="chevron-forward"
+    size={17}
+    color={colors.brown}
+  />
 
-      </Pressable>
+</Pressable>
 
       {/* ===================================== */}
       {/* MI ÚLTIMA MEDICIÓN */}
@@ -350,20 +357,16 @@ export default function HomeScreen() {
           <Text style={styles.personalizeSubtitle}>
             Elige la funda que más se identifique contigo.
           </Text>
-
-          <Pressable
-            style={styles.personalizeButton}
-            onPress={() => router.push('/(tabs)/yo')}
-          >
-
-            <Ionicons
-              name="chevron-forward"
-              size={17}
-              color={colors.white}
-            />
-
-          </Pressable>
-
+<Pressable
+  style={styles.personalizeButton}
+  onPress={() => router.push('/personaliza-soi')}
+>
+  <Ionicons
+    name="chevron-forward"
+    size={17}
+    color={colors.white}
+  />
+</Pressable>
         </View>
 
         {/* REPRESENTACIÓN DEL DISPOSITIVO */}
