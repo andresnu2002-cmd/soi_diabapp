@@ -200,19 +200,16 @@ export default function RegistrarMedicionScreen() {
     }
 
     const measurementDate = new Date(
-      `${date}T${time}:00`
-    );
+  `${date}T${time}:00`
+);
 
-    if (
-      Number.isNaN(measurementDate.getTime()) ||
-      measurementDate.getTime() > Date.now()
-    ) {
-      showMessage(
-        'Fecha u hora inválida',
-        'La medición no puede tener una fecha futura.'
-      );
-      return;
-    }
+if (Number.isNaN(measurementDate.getTime())) {
+  showMessage(
+    'Fecha u hora inválida',
+    'Introduce una fecha y hora válidas.'
+  );
+  return;
+}
 
     addMeasurement({
       id: `${Date.now()}-${Math.random()

@@ -180,22 +180,34 @@ export default function SeguimientoScreen() {
     `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)
   );
 
-  const periodStart = new Date(now);
-  if (selectedPeriod === 'Día') {
-    periodStart.setHours(0, 0, 0, 0);
-  } else if (selectedPeriod === 'Semana') {
-    periodStart.setDate(now.getDate() - 6);
-    periodStart.setHours(0, 0, 0, 0);
-  } else {
-    periodStart.setDate(now.getDate() - 29);
-    periodStart.setHours(0, 0, 0, 0);
-  }
+const selectedDateKey = formatDateKey(selectedDate);
 
-  const filtered = sorted.filter(item =>
-    new Date(`${item.date}T${item.time}:00`) >= periodStart &&
-    new Date(`${item.date}T${item.time}:00`) <= now
+const periodStart = new Date(selectedDate);
+periodStart.setHours(0, 0, 0, 0);
+
+const periodEnd = new Date(selectedDate);
+periodEnd.setHours(23, 59, 59, 999);
+
+if (selectedPeriod === 'Semana') {
+  periodStart.setDate(periodStart.getDate() - 6);
+}
+
+if (selectedPeriod === 'Mes') {
+  periodStart.setDate(periodStart.getDate() - 29);
+}
+
+const filtered = sorted.filter(item => {
+  const measurementDate = new Date(
+    `${item.date}T${item.time}:00`
   );
-  const chartData = filtered;
+
+  return (
+    measurementDate >= periodStart &&
+    measurementDate <= periodEnd
+  );
+});
+
+const chartData = filtered;
   const average = filtered.length
     ? Math.round(filtered.reduce((sum, item) => sum + item.glucose, 0) / filtered.length)
     : null;
