@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useMeasurements } from '@/app/context/MeasurementContext';
 
 import {
   Pressable,
@@ -39,33 +40,8 @@ type ProgressTab = 'Glucosa' | 'Hábitos' | 'Bienestar';
 type Period = 'Día' | 'Semana' | 'Mes';
 
 // ============================================
-// DATOS DE EJEMPLO
+// Los registros de glucosa provienen de MeasurementContext.
 // ============================================
-
-const glucoseData = [
-  { day: 'J', value: 68 },
-  { day: 'V', value: 88 },
-  { day: 'S', value: 78 },
-  { day: 'D', value: 104 },
-  { day: 'L', value: 89 },
-  { day: 'M', value: 111 },
-  { day: 'M', value: 100 },
-];
-
-const history = [
-  {
-    id: 1,
-    title: 'En ayunas',
-    date: 'Ayer · 7:32 a. m.',
-    value: 91,
-  },
-  {
-    id: 2,
-    title: '2 h después de cenar',
-    date: 'Lun, 18 mar · 9:14 p. m.',
-    value: 118,
-  },
-];
 
 const habits = [
   {
@@ -111,16 +87,6 @@ const months = [
 ];
 
 const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-
-// Fechas de ejemplo con mediciones
-const measurementDates: Record<string, number> = {
-  '2025-03-08': 1,
-  '2025-03-11': 2,
-  '2025-03-14': 1,
-  '2025-03-18': 2,
-  '2025-03-20': 3,
-  '2025-03-22': 1,
-};
 
 // ============================================
 // FUNCIONES DEL CALENDARIO
@@ -172,6 +138,8 @@ const getCalendarDays = (date: Date) => {
 // ============================================
 
 export default function SeguimientoScreen() {
+  const { measurements } = useMeasurements();
+  const [graphWidth, setGraphWidth] = useState(0);
 
   const abrirHabito = (
   tipo: 'alimentacion' | 'sueno' | 'actividad'
@@ -202,10 +170,51 @@ export default function SeguimientoScreen() {
     useState(false);
 
   const [currentMonth, setCurrentMonth] =
-    useState(new Date(2025, 2, 1));
+    useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
   const [selectedDate, setSelectedDate] =
-    useState(new Date(2025, 2, 20));
+    useState(new Date());
+
+  const now = new Date();
+  const sorted = [...measurements].sort((a, b) =>
+    `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)
+  );
+
+  const periodStart = new Date(now);
+  if (selectedPeriod === 'Día') {
+    periodStart.setHours(0, 0, 0, 0);
+  } else if (selectedPeriod === 'Semana') {
+    periodStart.setDate(now.getDate() - 6);
+    periodStart.setHours(0, 0, 0, 0);
+  } else {
+    periodStart.setDate(now.getDate() - 29);
+    periodStart.setHours(0, 0, 0, 0);
+  }
+
+  const filtered = sorted.filter(item =>
+    new Date(`${item.date}T${item.time}:00`) >= periodStart &&
+    new Date(`${item.date}T${item.time}:00`) <= now
+  );
+  const chartData = filtered;
+  const average = filtered.length
+    ? Math.round(filtered.reduce((sum, item) => sum + item.glucose, 0) / filtered.length)
+    : null;
+  const maxValue = Math.max(140, ...chartData.map(item => item.glucose));
+  const minValue = Math.min(60, ...chartData.map(item => item.glucose));
+  const chartHeight = 135;
+  const padding = 7;
+  const yFor = (value: number) =>
+    padding + ((maxValue - value) / (maxValue - minValue || 1)) * (chartHeight - padding * 2);
+  const xFor = (index: number) =>
+    chartData.length <= 1 ? graphWidth / 2 :
+      padding + index * (graphWidth - padding * 2) / (chartData.length - 1);
+
+  const measurementDates = measurements.reduce<Record<string, number>>((acc, item) => {
+    acc[item.date] = (acc[item.date] || 0) + 1;
+    return acc;
+  }, {});
+  const visibleHistory = showAllHistory ? [...sorted].reverse() : [...sorted].reverse().slice(0, 2);
+
 
   // ============================================
   // FUNCIONES
@@ -361,129 +370,79 @@ export default function SeguimientoScreen() {
           {/* ================================= */}
 
           {!showCalendar && (
-
             <View style={styles.chartCard}>
-
               <View style={styles.chartHeader}>
-
                 <Text style={styles.chartEyebrow}>
-                  Últimos 7 días
+                  {selectedPeriod === 'Día' ? 'Hoy' : selectedPeriod === 'Semana' ? 'Últimos 7 días' : 'Últimos 30 días'}
                 </Text>
-
-                <View style={styles.legend}>
-
-                  <View style={styles.legendItem}>
-                    <View style={styles.legendDot} />
-                    <Text style={styles.legendText}>
-                      Ayunas
-                    </Text>
-                  </View>
-
-                  <View style={styles.legendItem}>
-                    <View
-                      style={[
-                        styles.legendDot,
-                        { backgroundColor: colors.muted },
-                      ]}
-                    />
-                    <Text style={styles.legendText}>
-                      Poscomida
-                    </Text>
-                  </View>
-
-                </View>
-
+                <Text style={styles.legendText}>{filtered.length} mediciones</Text>
               </View>
-
               <View style={styles.averageRow}>
-
-                <Text style={styles.averageLabel}>
-                  Promedio
-                </Text>
-
-                <Text style={styles.averageValue}>
-                  108
-                </Text>
-
-                <Text style={styles.averageUnit}>
-                  mg/dL
-                </Text>
-
+                <Text style={styles.averageLabel}>Promedio</Text>
+                <Text style={styles.averageValue}>{average ?? '—'}</Text>
+                <Text style={styles.averageUnit}>mg/dL</Text>
               </View>
-
-              {/* GRÁFICA */}
-
-              <View style={styles.graph}>
-
-                <View style={styles.graphLabels}>
-                  <Text style={styles.axisText}>140</Text>
-                  <Text style={styles.axisText}>100</Text>
-                  <Text style={styles.axisText}>60</Text>
+              {chartData.length === 0 ? (
+                <View style={{ paddingVertical: 35, alignItems: 'center', gap: 12 }}>
+                  <Text style={styles.chartFooterText}>No hay mediciones en este período.</Text>
+                  <Pressable onPress={() => router.push('/registrar-medicion')}>
+                    <Text style={{ color: colors.terracotta, fontWeight: '600' }}>Registrar glucosa</Text>
+                  </Pressable>
                 </View>
-
-                <View style={styles.graphArea}>
-
-                  <View style={styles.gridLine} />
-                  <View style={styles.gridLine} />
-                  <View style={styles.gridLine} />
-
-                  <View style={styles.graphPoints}>
-
-                    {glucoseData.map((item, index) => {
-
-                      const height =
-                        ((item.value - 60) / 80) * 100;
-
-                      return (
-                        <View
-                          key={index}
-                          style={styles.graphColumn}
-                        >
-
-                          <View
-                            style={[
-                              styles.graphPoint,
-                              {
-                                bottom: `${height}%`,
-                              },
-                            ]}
-                          />
-
-                        </View>
-                      );
-                    })}
-
+              ) : (
+                <>
+                  <View style={styles.graph}>
+                    <View style={styles.graphLabels}>
+                      <Text style={styles.axisText}>{maxValue}</Text>
+                      <Text style={styles.axisText}>{Math.round((maxValue + minValue) / 2)}</Text>
+                      <Text style={styles.axisText}>{minValue}</Text>
+                    </View>
+                    <View style={styles.graphArea} onLayout={event => setGraphWidth(event.nativeEvent.layout.width)}>
+                      <View style={styles.gridLine} />
+                      <View style={styles.gridLine} />
+                      <View style={styles.gridLine} />
+                      {graphWidth > 0 && chartData.slice(1).map((item, index) => {
+                        const x1 = xFor(index);
+                        const x2 = xFor(index + 1);
+                        const y1 = yFor(chartData[index].glucose);
+                        const y2 = yFor(item.glucose);
+                        const dx = x2 - x1;
+                        const dy = y2 - y1;
+                        const length = Math.sqrt(dx * dx + dy * dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        return (
+                          <View key={`line-${item.id}`} style={{
+                            position: 'absolute', left: (x1 + x2) / 2 - length / 2,
+                            top: (y1 + y2) / 2 - 1, width: length, height: 2,
+                            backgroundColor: colors.terracotta,
+                            transform: [{ rotate: `${angle}deg` }],
+                          }} />
+                        );
+                      })}
+                      {graphWidth > 0 && chartData.map((item, index) => (
+                        <View key={item.id} style={[
+                          styles.graphPoint,
+                          { position: 'absolute', left: xFor(index) - 3.5, top: yFor(item.glucose) - 3.5 },
+                        ]} />
+                      ))}
+                    </View>
                   </View>
-
-                </View>
-
-              </View>
-
-              <View style={styles.daysRow}>
-
-                {glucoseData.map((item, index) => (
-                  <Text
-                    key={index}
-                    style={styles.dayLabel}
-                  >
-                    {item.day}
-                  </Text>
-                ))}
-
-              </View>
-
+                  <View style={styles.daysRow}>
+                    {chartData.map(item => (
+                      <Text key={item.id} style={styles.dayLabel}>
+                        {selectedPeriod === 'Día' ? item.time : `${item.date.slice(8)}/${item.date.slice(5, 7)}`}
+                      </Text>
+                    ))}
+                  </View>
+                </>
+              )}
               <View style={styles.chartFooter}>
-
                 <View style={styles.footerSquare} />
-
                 <Text style={styles.chartFooterText}>
-                  Los siguientes cambios serán al momento de medición.
+                  Valores registrados por ti. Consulta con tu equipo de salud para interpretar tus resultados.
                 </Text>
-
               </View>
-
             </View>
-
           )}
 
           {/* ================================= */}
@@ -654,28 +613,14 @@ export default function SeguimientoScreen() {
           {/* ================================= */}
 
           <View style={styles.statsRow}>
-
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>8</Text>
-              <Text style={styles.statLabel}>
-                En objetivo
-              </Text>
+              <Text style={styles.statValue}>{filtered.length}</Text>
+              <Text style={styles.statLabel}>Mediciones del período</Text>
             </View>
-
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>2</Text>
-              <Text style={styles.statLabel}>
-                Para revisar
-              </Text>
+              <Text style={styles.statValue}>{average ?? '—'}</Text>
+              <Text style={styles.statLabel}>Promedio mg/dL</Text>
             </View>
-
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>1</Text>
-              <Text style={styles.statLabel}>
-                Sin contexto
-              </Text>
-            </View>
-
           </View>
 
           {/* ================================= */}
@@ -703,54 +648,27 @@ export default function SeguimientoScreen() {
           </View>
 
           <View style={styles.historyCard}>
-
-            {history.map((item, index) => (
-
-              <View
-                key={item.id}
-                style={[
-                  styles.historyItem,
-                  index !== history.length - 1 &&
-                    styles.historyBorder,
-                ]}
-              >
-
+            {visibleHistory.length === 0 ? (
+              <Text style={[styles.historyDate, { padding: 18 }]}>Aún no hay mediciones registradas.</Text>
+            ) : visibleHistory.map((item, index) => (
+              <View key={item.id} style={[
+                styles.historyItem,
+                index !== visibleHistory.length - 1 && styles.historyBorder,
+              ]}>
                 <View style={styles.historyIcon}>
-                  <Ionicons
-                    name="pencil"
-                    size={13}
-                    color={colors.terracotta}
-                  />
+                  <Ionicons name="pencil" size={13} color={colors.terracotta} />
                 </View>
-
                 <View style={styles.historyInfo}>
-
-                  <Text style={styles.historyItemTitle}>
-                    {item.title}
-                  </Text>
-
-                  <Text style={styles.historyDate}>
-                    {item.date}
-                  </Text>
-
+                  <Text style={styles.historyItemTitle}>{item.moment}</Text>
+                  <Text style={styles.historyDate}>{item.date} · {item.time}</Text>
+                  {!!item.food && <Text style={styles.historyDate}>{item.food}</Text>}
                 </View>
-
                 <View style={styles.historyResult}>
-
-                  <Text style={styles.historyValue}>
-                    {item.value}
-                  </Text>
-
-                  <Text style={styles.historyUnit}>
-                    mg/dL
-                  </Text>
-
+                  <Text style={styles.historyValue}>{item.glucose}</Text>
+                  <Text style={styles.historyUnit}>mg/dL</Text>
                 </View>
-
               </View>
-
             ))}
-
           </View>
 
         </View>
