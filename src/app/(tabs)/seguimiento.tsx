@@ -140,6 +140,7 @@ const getCalendarDays = (date: Date) => {
 export default function SeguimientoScreen() {
   const { measurements } = useMeasurements();
   const [graphWidth, setGraphWidth] = useState(0);
+  const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null);
 
   const abrirHabito = (
   tipo: 'alimentacion' | 'sueno' | 'actividad'
@@ -206,6 +207,7 @@ const filtered =
         );
       });
 const chartData = filtered;
+  const selectedMeasurement = chartData.find(item => item.id === selectedMeasurementId) ?? null;
   const average = filtered.length
     ? Math.round(filtered.reduce((sum, item) => sum + item.glucose, 0) / filtered.length)
     : null;
@@ -433,12 +435,28 @@ const chartData = filtered;
                           }} />
                         );
                       })}
-                      {graphWidth > 0 && chartData.map((item, index) => (
-                        <View key={item.id} style={[
-                          styles.graphPoint,
-                          { position: 'absolute', left: xFor(index) - 3.5, top: yFor(item.glucose) - 3.5 },
-                        ]} />
-                      ))}
+                      {graphWidth > 0 && chartData.map((item, index) => {
+                        const selected = selectedMeasurementId === item.id;
+                        return (
+                          <Pressable
+                            key={item.id}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Medición ${item.glucose} mg/dL del ${item.date} a las ${item.time}`}
+                            accessibilityHint="Muestra los detalles de esta medición"
+                            onPress={() => setSelectedMeasurementId(selected ? null : item.id)}
+                            hitSlop={8}
+                            style={[
+                              styles.pointTouchTarget,
+                              {
+                                left: xFor(index) - 14,
+                                top: yFor(item.glucose) - 14,
+                              },
+                            ]}
+                          >
+                            <View style={[styles.graphPoint, selected && styles.graphPointSelected]} />
+                          </Pressable>
+                        );
+                      })}
                     </View>
                   </View>
                   <View style={styles.daysRow}>
@@ -467,6 +485,35 @@ const chartData = filtered;
                       );
                     })}
                   </View>
+                  {selectedMeasurement && (
+                    <View style={styles.measurementDetailCard}>
+                      <View style={styles.detailHeader}>
+                        <View style={styles.detailHeading}>
+                          <View style={styles.detailMarker} />
+                          <Text style={styles.detailTitle}>Medición seleccionada</Text>
+                        </View>
+                        <Pressable
+                          onPress={() => setSelectedMeasurementId(null)}
+                          accessibilityLabel="Cerrar detalles"
+                          hitSlop={10}
+                        >
+                          <Ionicons name="close" size={18} color={colors.brown} />
+                        </Pressable>
+                      </View>
+                      <Text style={styles.detailValue}>
+                        {selectedMeasurement.glucose} <Text style={styles.detailUnit}>mg/dL</Text>
+                      </Text>
+                      <Text style={styles.detailText}>Fecha: {selectedMeasurement.date}</Text>
+                      <Text style={styles.detailText}>Hora: {selectedMeasurement.time}</Text>
+                      <Text style={styles.detailText}>Momento: {selectedMeasurement.moment}</Text>
+                      <Text style={styles.detailText}>
+                        Comida relacionada: {selectedMeasurement.food || 'No indicada'}
+                      </Text>
+                      <Text style={styles.detailText}>
+                        Nota: {selectedMeasurement.note || 'Sin nota'}
+                      </Text>
+                    </View>
+                  )}
                 </>
               )}
               <View style={styles.chartFooter}>
@@ -1093,6 +1140,75 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.terracotta,
     alignSelf: 'center',
+  },
+
+  pointTouchTarget: {
+    position: 'absolute',
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+
+  graphPointSelected: {
+    width: 13,
+    height: 13,
+    borderRadius: 7,
+    borderWidth: 3,
+    backgroundColor: colors.beige,
+  },
+
+  measurementDetailCard: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: colors.terracotta,
+    backgroundColor: '#FCF5EE',
+    gap: 5,
+  },
+
+  detailHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  detailHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+
+  detailMarker: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: colors.terracotta,
+  },
+
+  detailTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.brown,
+  },
+
+  detailValue: {
+    fontSize: 22,
+    fontFamily: 'serif',
+    color: colors.terracotta,
+  },
+
+  detailUnit: {
+    fontSize: 11,
+    color: colors.muted,
+  },
+
+  detailText: {
+    fontSize: 11,
+    lineHeight: 17,
+    color: colors.text,
   },
 
   daysRow: {
