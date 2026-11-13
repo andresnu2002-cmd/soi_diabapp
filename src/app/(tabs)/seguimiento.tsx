@@ -37,7 +37,7 @@ const colors = {
 
 type ProgressTab = 'Glucosa' | 'Hábitos' | 'Bienestar';
 
-type Period = 'Día' | 'Semana' | 'Mes';
+type Period = 'Día' | 'Semana' | 'Mes' | 'Todos';
 
 // ============================================
 // Los registros de glucosa provienen de MeasurementContext.
@@ -152,9 +152,8 @@ export default function SeguimientoScreen() {
 
   const [activeTab, setActiveTab] =
     useState<ProgressTab>('Glucosa');
-
-  const [selectedPeriod, setSelectedPeriod] =
-    useState<Period>('Semana');
+const [selectedPeriod, setSelectedPeriod] =
+  useState<Period>('Todos');
 
   const [showAllHistory, setShowAllHistory] =
     useState(false);
@@ -175,12 +174,9 @@ export default function SeguimientoScreen() {
   const [selectedDate, setSelectedDate] =
     useState(new Date());
 
-  const now = new Date();
   const sorted = [...measurements].sort((a, b) =>
     `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)
   );
-
-const selectedDateKey = formatDateKey(selectedDate);
 
 const periodStart = new Date(selectedDate);
 periodStart.setHours(0, 0, 0, 0);
@@ -196,17 +192,19 @@ if (selectedPeriod === 'Mes') {
   periodStart.setDate(periodStart.getDate() - 29);
 }
 
-const filtered = sorted.filter(item => {
-  const measurementDate = new Date(
-    `${item.date}T${item.time}:00`
-  );
+const filtered =
+  selectedPeriod === 'Todos'
+    ? sorted
+    : sorted.filter(item => {
+        const measurementDate = new Date(
+          `${item.date}T${item.time}:00`
+        );
 
-  return (
-    measurementDate >= periodStart &&
-    measurementDate <= periodEnd
-  );
-});
-
+        return (
+          measurementDate >= periodStart &&
+          measurementDate <= periodEnd
+        );
+      });
 const chartData = filtered;
   const average = filtered.length
     ? Math.round(filtered.reduce((sum, item) => sum + item.glucose, 0) / filtered.length)
@@ -325,7 +323,7 @@ const chartData = filtered;
 
             <View style={styles.periodSelector}>
 
-              {(['Día', 'Semana', 'Mes'] as Period[])
+              {(['Día', 'Semana', 'Mes', 'Todos'] as Period[])
                 .map((period) => {
 
                   const selected =
@@ -385,7 +383,11 @@ const chartData = filtered;
             <View style={styles.chartCard}>
               <View style={styles.chartHeader}>
                 <Text style={styles.chartEyebrow}>
-                  {selectedPeriod === 'Día' ? 'Hoy' : selectedPeriod === 'Semana' ? 'Últimos 7 días' : 'Últimos 30 días'}
+                  {selectedPeriod === 'Todos'
+                    ? 'Todas mis mediciones'
+                    : selectedPeriod === 'Día'
+                      ? `Día ${formatDateKey(selectedDate)}`
+                      : `${formatDateKey(periodStart)} al ${formatDateKey(periodEnd)}`}
                 </Text>
                 <Text style={styles.legendText}>{filtered.length} mediciones</Text>
               </View>
@@ -440,11 +442,30 @@ const chartData = filtered;
                     </View>
                   </View>
                   <View style={styles.daysRow}>
-                    {chartData.map(item => (
-                      <Text key={item.id} style={styles.dayLabel}>
-                        {selectedPeriod === 'Día' ? item.time : `${item.date.slice(8)}/${item.date.slice(5, 7)}`}
-                      </Text>
-                    ))}
+                    {chartData.map((item, index) => {
+                      const labelStep = Math.max(1, Math.ceil(chartData.length / 4));
+                      if (index % labelStep !== 0 && index !== chartData.length - 1) return null;
+                      if (index === chartData.length - 1 && index > 0 && index - Math.floor((index - 1) / labelStep) * labelStep < 2) return null;
+                      return (
+                        <Text
+                          key={item.id}
+                          numberOfLines={1}
+                          style={[
+                            styles.dayLabel,
+                            {
+                              position: 'absolute',
+                              left: Math.max(0, Math.min(graphWidth - 42, xFor(index) - 21)),
+                              width: 42,
+                              textAlign: 'center',
+                            },
+                          ]}
+                        >
+                          {selectedPeriod === 'Día'
+                            ? item.time
+                            : `${item.date.slice(8)}/${item.date.slice(5, 7)}`}
+                        </Text>
+                      );
+                    })}
                   </View>
                 </>
               )}
@@ -550,9 +571,11 @@ const chartData = filtered;
                       <Pressable
                         key={dateKey}
                         style={styles.calendarDayContainer}
-                        onPress={() =>
-                          setSelectedDate(date)
-                        }
+                        onPress={() => {
+                          setSelectedDate(date);
+                          setSelectedPeriod('Día');
+                          setShowCalendar(false);
+                        }}
                       >
 
                         <View
@@ -1073,10 +1096,10 @@ const styles = StyleSheet.create({
   },
 
   daysRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingLeft: 25,
+    height: 16,
+    marginLeft: 25,
     marginTop: 8,
+    position: 'relative',
   },
 
   dayLabel: {
