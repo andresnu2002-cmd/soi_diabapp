@@ -89,15 +89,9 @@ export default function PrepararConsulta() {
   // PREVISUALIZAR
   // ============================================
 
-  const handlePreview = () => {
-
-    Alert.alert(
-      'Previsualizar informe',
-      'Próximamente podrás visualizar el informe completo antes de compartirlo con tu médico.'
-    );
-
-  };
-
+const handlePreview = () => {
+  router.push('/vista-previa');
+};
   // ============================================
   // INTERFAZ
   // ============================================
@@ -116,9 +110,15 @@ export default function PrepararConsulta() {
       <View style={styles.header}>
 
         <Pressable
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
+  style={styles.backButton}
+  onPress={() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/resultado');
+    }
+  }}
+>
 
           <Ionicons
             name="chevron-back"
