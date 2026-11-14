@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useState } from 'react';
-
+import { useDailyRecords } from '@/app/context/DailyRecordsContext';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -72,7 +72,7 @@ const emotions = [
 // ============================================
 
 export default function RegistrarBienestar() {
-
+const { addWellnessRecord } = useDailyRecords();
   const [selectedEmotion, setSelectedEmotion] =
     useState<string>('tranquila');
 
@@ -82,31 +82,54 @@ export default function RegistrarBienestar() {
   // GUARDAR REGISTRO
   // ============================================
 
-  const handleSave = async () => {
+const handleSave = async () => {
 
-    if (!selectedEmotion) {
-      Alert.alert(
-        'Selecciona una emoción',
-        'Cuéntanos cómo te sientes hoy.'
-      );
-      return;
-    }
+  if (!selectedEmotion) {
+    Alert.alert(
+      'Selecciona una emoción',
+      'Cuéntanos cómo te sientes hoy.'
+    );
+    return;
+  }
 
+  const now = new Date();
+
+  const date = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  addWellnessRecord({
+    id: Date.now().toString(),
+    date,
+    emotion: selectedEmotion,
+    note: note.trim(),
+  });
+
+  if (Platform.OS !== 'web') {
     await Haptics.notificationAsync(
       Haptics.NotificationFeedbackType.Success
     );
+  }
 
-    Alert.alert(
-      'Registro completado',
-      'Tu emoción ha sido registrada en tu diario.',
-      [
-        {
-          text: 'Aceptar',
-          onPress: () => router.back(),
-        },
-      ]
-    );
-  };
+  if (Platform.OS === 'web') {
+    window.alert('Tu emoción ha sido registrada en tu diario.');
+    router.back();
+    return;
+  }
+
+  Alert.alert(
+    'Registro completado',
+    'Tu emoción ha sido registrada en tu diario.',
+    [
+      {
+        text: 'Aceptar',
+        onPress: () => router.back(),
+      },
+    ]
+  );
+};
 
   // ============================================
   // INTERFAZ

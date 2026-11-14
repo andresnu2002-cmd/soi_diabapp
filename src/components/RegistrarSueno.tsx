@@ -5,13 +5,15 @@ import { useState } from 'react';
 
 import {
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
-
+import { useDailyRecords } from '@/app/context/DailyRecordsContext';
 // ============================================
 // COLORES S.O.I.
 // ============================================
@@ -50,6 +52,20 @@ const sleepQuality = [
 
 export default function RegistrarSueno() {
 
+  const { addSleepRecord } = useDailyRecords();
+
+const getToday = () => {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
+const [date, setDate] = useState(getToday);
+
   const [hours, setHours] =
     useState('7–8 horas');
 
@@ -60,31 +76,76 @@ export default function RegistrarSueno() {
   // GUARDAR
   // ============================================
 
-  const handleSave = async () => {
+const handleSave = async () => {
 
-    if (!hours || !quality) {
-      Alert.alert(
-        'Falta información',
-        'Selecciona las horas y la calidad de tu descanso.'
-      );
-      return;
-    }
-
-    await Haptics.notificationAsync(
-      Haptics.NotificationFeedbackType.Success
-    );
-
+  if (!hours || !quality) {
     Alert.alert(
-      'Descanso registrado',
-      'Tu descanso se ha registrado correctamente.',
-      [
-        {
-          text: 'Aceptar',
-          onPress: () => router.back(),
-        },
-      ]
+      'Falta información',
+      'Selecciona las horas y la calidad de tu descanso.'
     );
-  };
+    return;
+  }
+
+  // Validar formato de fecha
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+  if (!datePattern.test(date)) {
+    if (Platform.OS === 'web') {
+      window.alert('Introduce la fecha en formato AAAA-MM-DD.');
+    } else {
+      Alert.alert(
+        'Fecha inválida',
+        'Introduce la fecha en formato AAAA-MM-DD.'
+      );
+    }
+    return;
+  }
+
+  const [year, month, day] = date.split('-').map(Number);
+  const parsedDate = new Date(year, month - 1, day);
+
+  if (
+    parsedDate.getFullYear() !== year ||
+    parsedDate.getMonth() !== month - 1 ||
+    parsedDate.getDate() !== day
+  ) {
+    if (Platform.OS === 'web') {
+      window.alert('Introduce una fecha válida.');
+    } else {
+      Alert.alert('Fecha inválida', 'Introduce una fecha válida.');
+    }
+    return;
+  }
+
+  // Guardar en DailyRecordsContext
+  addSleepRecord({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    date,
+    hours,
+    quality,
+  });
+
+  await Haptics.notificationAsync(
+    Haptics.NotificationFeedbackType.Success
+  );
+
+  if (Platform.OS === 'web') {
+    window.alert('Tu descanso se ha registrado correctamente.');
+    router.back();
+    return;
+  }
+
+  Alert.alert(
+    'Descanso registrado',
+    'Tu descanso se ha registrado correctamente.',
+    [
+      {
+        text: 'Aceptar',
+        onPress: () => router.back(),
+      },
+    ]
+  );
+};
 
   // ============================================
   // INTERFAZ
@@ -134,6 +195,22 @@ export default function RegistrarSueno() {
       >
 
         <View style={styles.formCard}>
+
+          {/* FECHA DEL REGISTRO */}
+
+<Text style={styles.dateLabel}>
+  Fecha del registro
+</Text>
+
+<TextInput
+  style={styles.dateInput}
+  value={date}
+  onChangeText={setDate}
+  placeholder="AAAA-MM-DD"
+  placeholderTextColor={colors.muted}
+  keyboardType="numbers-and-punctuation"
+  maxLength={10}
+/>
 
           <Text style={styles.eyebrow}>
             SUEÑO
@@ -414,5 +491,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.white,
   },
+  dateLabel: {
+  fontSize: 12,
+  fontWeight: '600',
+  color: colors.brown,
+  marginBottom: 10,
+},
+
+dateInput: {
+  borderWidth: 1,
+  borderColor: colors.border,
+  borderRadius: 12,
+  paddingHorizontal: 13,
+  height: 47,
+  color: colors.brown,
+  fontSize: 12,
+  backgroundColor: '#FFFCF9',
+  marginBottom: 20,
+},
 
 });

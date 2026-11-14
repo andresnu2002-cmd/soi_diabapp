@@ -14,7 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
+import { useDailyRecords } from '@/app/context/DailyRecordsContext';
 // ============================================
 // COLORES S.O.I.
 // ============================================
@@ -47,6 +47,22 @@ type MealType =
 
 export default function RegistrarComida() {
 
+  const { addFoodRecord } = useDailyRecords();
+
+const getToday = () => {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
+const [date, setDate] = useState(getToday);
+
+
+
   const [mealType, setMealType] =
     useState<MealType>('Almuerzo');
 
@@ -67,31 +83,69 @@ export default function RegistrarComida() {
   // GUARDAR COMIDA
   // ============================================
 
-  const handleSave = async () => {
-
-    if (!time.trim()) {
-      Alert.alert(
-        'Falta información',
-        'Por favor, indica la hora de tu comida.'
-      );
-      return;
-    }
-
-    await Haptics.notificationAsync(
-      Haptics.NotificationFeedbackType.Success
-    );
-
+const handleSave = async () => {
+  if (!time.trim()) {
     Alert.alert(
-      'Comida registrada',
-      'Tu registro se ha completado correctamente.',
-      [
-        {
-          text: 'Aceptar',
-          onPress: () => router.back(),
-        },
-      ]
+      'Falta información',
+      'Por favor, indica la hora de tu comida.'
     );
-  };
+    return;
+  }
+
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+  if (!datePattern.test(date)) {
+    Alert.alert(
+      'Fecha inválida',
+      'Introduce la fecha en formato AAAA-MM-DD.'
+    );
+    return;
+  }
+
+  const [year, month, day] = date.split('-').map(Number);
+  const parsedDate = new Date(year, month - 1, day);
+
+  if (
+    parsedDate.getFullYear() !== year ||
+    parsedDate.getMonth() !== month - 1 ||
+    parsedDate.getDate() !== day
+  ) {
+    Alert.alert(
+      'Fecha inválida',
+      'Introduce una fecha válida.'
+    );
+    return;
+  }
+
+  addFoodRecord({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    date,
+    mealType,
+    time: time.trim(),
+    description: description.trim(),
+  });
+
+  await Haptics.notificationAsync(
+    Haptics.NotificationFeedbackType.Success
+  );
+
+  if (Platform.OS === 'web') {
+    window.alert('Tu comida se ha registrado correctamente.');
+    router.back();
+    return;
+  }
+
+  Alert.alert(
+    'Comida registrada',
+    'Tu registro se ha completado correctamente.',
+    [
+      {
+        text: 'Aceptar',
+        onPress: () => router.back(),
+      },
+    ]
+  );
+};
 
   // ============================================
   // INTERFAZ
@@ -143,6 +197,23 @@ export default function RegistrarComida() {
       >
 
         <View style={styles.formCard}>
+
+
+        {/* FECHA DEL REGISTRO */}
+
+<Text style={styles.label}>
+  Fecha del registro
+</Text>
+
+<TextInput
+  style={styles.input}
+  value={date}
+  onChangeText={setDate}
+  placeholder="AAAA-MM-DD"
+  placeholderTextColor={colors.muted}
+  keyboardType="numbers-and-punctuation"
+  maxLength={10}
+/>
 
           {/* TIPO DE COMIDA */}
 

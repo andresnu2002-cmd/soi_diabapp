@@ -1,14 +1,16 @@
+import { useDailyRecords } from '@/app/context/DailyRecordsContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useState } from 'react';
-
 import {
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
@@ -55,6 +57,28 @@ const feelings = [
 
 export default function RegistrarActividad() {
 
+    // ============================================
+  // CONTEXTO DE REGISTROS DIARIOS
+  // ============================================
+
+  const { addActivityRecord } = useDailyRecords();
+
+  // ============================================
+  // FECHA DEL REGISTRO
+  // ============================================
+
+  const getToday = () => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const [date, setDate] = useState(getToday);
+
   const [activity, setActivity] =
     useState('🚶 Caminar');
 
@@ -67,24 +91,100 @@ export default function RegistrarActividad() {
   // ============================================
   // GUARDAR
   // ============================================
+  // ============================================
+  // GUARDAR ACTIVIDAD FÍSICA
+  // ============================================
 
   const handleSave = async () => {
 
+    // Validar información de actividad
+
     if (!activity || !duration || !feeling) {
-      Alert.alert(
-        'Falta información',
-        'Completa los datos de tu actividad.'
-      );
+      if (Platform.OS === 'web') {
+        window.alert('Completa los datos de tu actividad.');
+      } else {
+        Alert.alert(
+          'Falta información',
+          'Completa los datos de tu actividad.'
+        );
+      }
       return;
     }
 
-    await Haptics.notificationAsync(
-      Haptics.NotificationFeedbackType.Success
-    );
+    // ============================================
+    // VALIDAR FECHA
+    // ============================================
+
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+    if (!datePattern.test(date)) {
+      if (Platform.OS === 'web') {
+        window.alert(
+          'Introduce la fecha en formato AAAA-MM-DD.'
+        );
+      } else {
+        Alert.alert(
+          'Fecha inválida',
+          'Introduce la fecha en formato AAAA-MM-DD.'
+        );
+      }
+      return;
+    }
+
+    const [year, month, day] = date.split('-').map(Number);
+
+    const parsedDate = new Date(year, month - 1, day);
+
+    if (
+      parsedDate.getFullYear() !== year ||
+      parsedDate.getMonth() !== month - 1 ||
+      parsedDate.getDate() !== day
+    ) {
+      if (Platform.OS === 'web') {
+        window.alert('Introduce una fecha válida.');
+      } else {
+        Alert.alert(
+          'Fecha inválida',
+          'Introduce una fecha válida.'
+        );
+      }
+      return;
+    }
+
+    // ============================================
+    // GUARDAR EN DAILY RECORDS CONTEXT
+    // ============================================
+
+    addActivityRecord({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      date,
+      activity,
+      duration,
+      feeling,
+    });
+
+    // ============================================
+    // CONFIRMACIÓN
+    // ============================================
+
+    if (Platform.OS !== 'web') {
+      await Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Success
+      );
+    }
+
+    if (Platform.OS === 'web') {
+      window.alert(
+        'Tu actividad física se ha registrado correctamente.'
+      );
+
+      router.back();
+      return;
+    }
 
     Alert.alert(
       'Actividad registrada',
-      'Tu movimiento de hoy se ha registrado correctamente.',
+      'Tu movimiento se ha registrado correctamente.',
       [
         {
           text: 'Aceptar',
@@ -93,7 +193,6 @@ export default function RegistrarActividad() {
       ]
     );
   };
-
   // ============================================
   // INTERFAZ
   // ============================================
@@ -142,6 +241,24 @@ export default function RegistrarActividad() {
       >
 
         <View style={styles.formCard}>
+
+          {/* ================================= */}
+          {/* FECHA DEL REGISTRO */}
+          {/* ================================= */}
+
+          <Text style={styles.dateLabel}>
+            Fecha del registro
+          </Text>
+
+          <TextInput
+            style={styles.dateInput}
+            value={date}
+            onChangeText={setDate}
+            placeholder="AAAA-MM-DD"
+            placeholderTextColor={colors.muted}
+            keyboardType="numbers-and-punctuation"
+            maxLength={10}
+          />
 
           {/* TIPO DE ACTIVIDAD */}
 
@@ -467,6 +584,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: colors.white,
+  },
+    // ============================================
+  // FECHA DEL REGISTRO
+  // ============================================
+
+  dateLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.brown,
+    marginBottom: 10,
+  },
+
+  dateInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 13,
+    height: 47,
+    color: colors.brown,
+    fontSize: 12,
+    backgroundColor: '#FFFCF9',
+    marginBottom: 20,
   },
 
 });

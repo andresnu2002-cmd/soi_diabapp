@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useMeasurements } from '@/app/context/MeasurementContext';
+import { useDailyRecords } from '@/app/context/DailyRecordsContext';
 
 import {
   Pressable,
@@ -139,6 +140,7 @@ const getCalendarDays = (date: Date) => {
 
 export default function SeguimientoScreen() {
   const { measurements } = useMeasurements();
+  const { getRecordsByDate, wellnessRecords } = useDailyRecords();
   const [graphWidth, setGraphWidth] = useState(0);
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<string | null>(null);
 
@@ -208,6 +210,10 @@ const filtered =
       });
 const chartData = filtered;
   const selectedMeasurement = chartData.find(item => item.id === selectedMeasurementId) ?? null;
+  const dailyRecords = selectedMeasurement ? getRecordsByDate(selectedMeasurement.date) : null;
+  const latestWellness = [...wellnessRecords].sort((a, b) => b.date.localeCompare(a.date))[0] ?? null;
+  const emotionNames: Record<string, string> = { emocionada: 'Emocionada', feliz: 'Feliz', tranquila: 'Tranquila', segura: 'Segura', ansiosa: 'Ansiosa', miedo: 'Con miedo' };
+  const emotionLabel = (emotion: string) => emotionNames[emotion] ?? emotion;
   const average = filtered.length
     ? Math.round(filtered.reduce((sum, item) => sum + item.glucose, 0) / filtered.length)
     : null;
@@ -512,6 +518,40 @@ const chartData = filtered;
                       <Text style={styles.detailText}>
                         Nota: {selectedMeasurement.note || 'Sin nota'}
                       </Text>
+                      <View style={styles.dailyDivider} />
+                      <Text style={styles.dailySectionTitle}>Registros del día · {selectedMeasurement.date}</Text>
+
+                      <Text style={styles.dailyCategory}>🍽️ Alimentación</Text>
+                      {dailyRecords?.food.length ? dailyRecords.food.map(item => (
+                        <View key={item.id} style={styles.dailyRecord}>
+                          <Text style={styles.detailText}>{item.mealType} · {item.time}</Text>
+                          <Text style={styles.detailText}>{item.description || 'Sin descripción'}</Text>
+                        </View>
+                      )) : <Text style={styles.dailyEmpty}>Sin registrar</Text>}
+
+                      <Text style={styles.dailyCategory}>🌙 Sueño</Text>
+                      {dailyRecords?.sleep ? (
+                        <View style={styles.dailyRecord}>
+                          <Text style={styles.detailText}>{dailyRecords.sleep.hours}</Text>
+                          <Text style={styles.detailText}>{dailyRecords.sleep.quality}</Text>
+                        </View>
+                      ) : <Text style={styles.dailyEmpty}>Sin registrar</Text>}
+
+                      <Text style={styles.dailyCategory}>🏃 Actividad física</Text>
+                      {dailyRecords?.activities.length ? dailyRecords.activities.map(item => (
+                        <View key={item.id} style={styles.dailyRecord}>
+                          <Text style={styles.detailText}>{item.activity} · {item.duration}</Text>
+                          <Text style={styles.detailText}>{item.feeling}</Text>
+                        </View>
+                      )) : <Text style={styles.dailyEmpty}>Sin registrar</Text>}
+
+                      <Text style={styles.dailyCategory}>💗 Bienestar</Text>
+                      {dailyRecords?.wellness ? (
+                        <View style={styles.dailyRecord}>
+                          <Text style={styles.detailText}>{emotionLabel(dailyRecords.wellness.emotion)}</Text>
+                          <Text style={styles.detailText}>{dailyRecords.wellness.note || 'Sin nota'}</Text>
+                        </View>
+                      ) : <Text style={styles.dailyEmpty}>Sin registrar</Text>}
                     </View>
                   )}
                 </>
@@ -884,23 +924,17 @@ onPress={() => {
           </Text>
 
           <View style={styles.diaryCard}>
-
-            <Text style={styles.diaryEmoji}>
-              🌿
-            </Text>
-
+            <Text style={styles.diaryEmoji}>{latestWellness ? '💗' : '🌿'}</Text>
             <View style={styles.diaryInfo}>
-
               <Text style={styles.diaryMood}>
-                Tranquila
+                {latestWellness ? emotionLabel(latestWellness.emotion) : 'Sin registros todavía'}
               </Text>
-
               <Text style={styles.diaryText}>
-                Hoy · "Me tomé un momento para respirar".
+                {latestWellness
+                  ? `${latestWellness.date} · ${latestWellness.note || 'Sin nota'}`
+                  : 'Registra cómo te sientes para comenzar tu diario.'}
               </Text>
-
             </View>
-
           </View>
 
         </View>
@@ -1209,6 +1243,38 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 17,
     color: colors.text,
+  },
+
+  dailyDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  dailySectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.brown,
+    marginBottom: 5,
+  },
+  dailyCategory: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.terracotta,
+    marginTop: 9,
+    marginBottom: 2,
+  },
+  dailyRecord: {
+    paddingLeft: 9,
+    paddingVertical: 3,
+    borderLeftWidth: 2,
+    borderLeftColor: colors.border,
+    marginBottom: 3,
+  },
+  dailyEmpty: {
+    fontSize: 11,
+    color: colors.muted,
+    fontStyle: 'italic',
   },
 
   daysRow: {
