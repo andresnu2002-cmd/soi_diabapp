@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-
 import {
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
@@ -64,16 +65,128 @@ export default function ResultadosScreen() {
   const [reportReady, setReportReady] = useState(false);
 
   // ============================================
+// ESTADOS DE LA CITA
+// ============================================
+
+const [isEditingAppointment, setIsEditingAppointment] =
+  useState(false);
+
+const [appointmentData, setAppointmentData] = useState({
+  date: '2027-03-28',
+  time: appointment.time,
+  specialty: appointment.specialty,
+  doctor: appointment.doctor,
+  type: appointment.type,
+});
+
+const [appointmentDraft, setAppointmentDraft] =
+  useState(appointmentData);
+
+const updateAppointmentDraft = (
+  field: keyof typeof appointmentDraft,
+  value: string
+) => {
+  setAppointmentDraft(current => ({
+    ...current,
+    [field]: value,
+  }));
+};
+
+const appointmentDate = new Date(
+  `${appointmentData.date}T12:00:00`
+);
+
+const appointmentDay = String(
+  appointmentDate.getDate()
+).padStart(2, '0');
+
+const appointmentMonth = appointmentDate
+  .toLocaleDateString('es-ES', { month: 'short' })
+  .replace('.', '')
+  .toUpperCase();
+
+  // ============================================
   // FUNCIONES
   // ============================================
 
   const handleEditAppointment = () => {
-    Alert.alert(
-      'Editar cita',
-      'Próximamente podrás modificar los datos de tu próxima consulta.'
-    );
-  };
+  setAppointmentDraft({ ...appointmentData });
+  setIsEditingAppointment(true);
+};
 
+const handleSaveAppointment = () => {
+
+  const {
+    date,
+    time,
+    specialty,
+    doctor,
+    type,
+  } = appointmentDraft;
+
+  if (
+    !date.trim() ||
+    !time.trim() ||
+    !specialty.trim() ||
+    !doctor.trim() ||
+    !type.trim()
+  ) {
+    if (Platform.OS === 'web') {
+      window.alert('Completa todos los campos de la cita.');
+    } else {
+      Alert.alert(
+        'Campos incompletos',
+        'Completa todos los campos de la cita.'
+      );
+    }
+    return;
+  }
+
+  // Validar fecha YYYY-MM-DD
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+
+  if (!dateMatch) {
+    if (Platform.OS === 'web') {
+      window.alert('La fecha debe tener el formato AAAA-MM-DD.');
+    } else {
+      Alert.alert('Fecha inválida', 'Usa el formato AAAA-MM-DD.');
+    }
+    return;
+  }
+
+  const year = Number(dateMatch[1]);
+  const month = Number(dateMatch[2]);
+  const day = Number(dateMatch[3]);
+
+  const parsedDate = new Date(year, month - 1, day);
+
+  const validDate =
+    parsedDate.getFullYear() === year &&
+    parsedDate.getMonth() === month - 1 &&
+    parsedDate.getDate() === day;
+
+  if (!validDate || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+    if (Platform.OS === 'web') {
+      window.alert('Verifica la fecha y la hora de la cita.');
+    } else {
+      Alert.alert(
+        'Datos inválidos',
+        'Verifica la fecha y la hora de la cita.'
+      );
+    }
+    return;
+  }
+
+  setAppointmentData({
+    date,
+    time,
+    specialty: specialty.trim(),
+    doctor: doctor.trim(),
+    type: type.trim(),
+  });
+
+  setIsEditingAppointment(false);
+};
   const handlePrepareAppointment = () => {
   router.push('/preparar-consulta');
 };
@@ -136,18 +249,18 @@ export default function ResultadosScreen() {
         <View style={styles.appointmentDateRow}>
 
           <Text style={styles.appointmentDay}>
-            {appointment.day}
-          </Text>
+  {appointmentDay}
+</Text>
 
           <View style={styles.appointmentDateDetails}>
 
             <Text style={styles.appointmentMonth}>
-              {appointment.month}
-            </Text>
+  {appointmentMonth}
+</Text>
 
             <Text style={styles.appointmentTime}>
-              {appointment.time}
-            </Text>
+  {appointmentData.time}
+</Text>
 
           </View>
 
@@ -156,12 +269,12 @@ export default function ResultadosScreen() {
         {/* ESPECIALIDAD */}
 
         <Text style={styles.appointmentTitle}>
-          {appointment.specialty}
-        </Text>
+  {appointmentData.specialty}
+</Text>
 
         <Text style={styles.appointmentDoctor}>
-          {appointment.doctor} · {appointment.type}
-        </Text>
+  {appointmentData.doctor} · {appointmentData.type}
+</Text>
 
         {/* BOTONES */}
 
@@ -204,6 +317,131 @@ export default function ResultadosScreen() {
         </View>
 
       </View>
+
+      {/* ===================================== */}
+{/* FORMULARIO EDITAR CITA */}
+{/* ===================================== */}
+
+{isEditingAppointment && (
+
+  <View style={styles.appointmentForm}>
+
+    <Text style={styles.formTitle}>
+      Editar próxima cita
+    </Text>
+
+    <Text style={styles.formSubtitle}>
+      Actualiza los detalles de tu consulta.
+    </Text>
+
+    {/* FECHA */}
+
+    <Text style={styles.formLabel}>
+      Fecha de la cita
+    </Text>
+
+    <TextInput
+      style={styles.formInput}
+      value={appointmentDraft.date}
+      onChangeText={(value) =>
+        updateAppointmentDraft('date', value)
+      }
+      placeholder="AAAA-MM-DD"
+      placeholderTextColor={colors.muted}
+    />
+
+    {/* HORA */}
+
+    <Text style={styles.formLabel}>
+      Hora
+    </Text>
+
+    <TextInput
+      style={styles.formInput}
+      value={appointmentDraft.time}
+      onChangeText={(value) =>
+        updateAppointmentDraft('time', value)
+      }
+      placeholder="10:30"
+      placeholderTextColor={colors.muted}
+    />
+
+    {/* CONSULTA O ESTUDIO */}
+
+    <Text style={styles.formLabel}>
+      Nombre de la consulta o estudio
+    </Text>
+
+    <TextInput
+      style={styles.formInput}
+      value={appointmentDraft.specialty}
+      onChangeText={(value) =>
+        updateAppointmentDraft('specialty', value)
+      }
+      placeholder="Ej. Ecografía obstétrica"
+      placeholderTextColor={colors.muted}
+    />
+
+    {/* MÉDICO */}
+
+    <Text style={styles.formLabel}>
+      Nombre del médico
+    </Text>
+
+    <TextInput
+      style={styles.formInput}
+      value={appointmentDraft.doctor}
+      onChangeText={(value) =>
+        updateAppointmentDraft('doctor', value)
+      }
+      placeholder="Ej. Dra. Laura Méndez"
+      placeholderTextColor={colors.muted}
+    />
+
+    {/* TIPO */}
+
+    <Text style={styles.formLabel}>
+      Tipo de consulta
+    </Text>
+
+    <TextInput
+      style={styles.formInput}
+      value={appointmentDraft.type}
+      onChangeText={(value) =>
+        updateAppointmentDraft('type', value)
+      }
+      placeholder="Presencial o virtual"
+      placeholderTextColor={colors.muted}
+    />
+
+    {/* BOTONES */}
+
+    <View style={styles.formButtons}>
+
+      <Pressable
+        style={styles.cancelButton}
+        onPress={() => setIsEditingAppointment(false)}
+      >
+        <Text style={styles.cancelButtonText}>
+          Cancelar
+        </Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.saveAppointmentButton}
+        onPress={handleSaveAppointment}
+      >
+        <Text style={styles.saveAppointmentText}>
+          Guardar cambios
+        </Text>
+      </Pressable>
+
+    </View>
+
+  </View>
+
+)}
+
 
       {/* ===================================== */}
       {/* MI RESUMEN */}
@@ -659,5 +897,88 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 13,
   },
+  // ============================================
+// EDITAR CITA
+// ============================================
+
+appointmentForm: {
+  backgroundColor: colors.white,
+  borderRadius: 18,
+  borderWidth: 1,
+  borderColor: colors.border,
+  padding: 18,
+  marginTop: -12,
+  marginBottom: 24,
+},
+
+formTitle: {
+  fontSize: 22,
+  fontFamily: 'serif',
+  color: colors.brown,
+  marginBottom: 5,
+},
+
+formSubtitle: {
+  fontSize: 11,
+  color: colors.muted,
+  marginBottom: 18,
+},
+
+formLabel: {
+  fontSize: 11,
+  fontWeight: '600',
+  color: colors.brown,
+  marginBottom: 7,
+},
+
+formInput: {
+  backgroundColor: '#FFFCF9',
+  borderWidth: 1,
+  borderColor: colors.border,
+  borderRadius: 12,
+  minHeight: 45,
+  paddingHorizontal: 13,
+  paddingVertical: 10,
+  fontSize: 13,
+  color: colors.brown,
+  marginBottom: 15,
+},
+
+formButtons: {
+  flexDirection: 'row',
+  gap: 10,
+  marginTop: 8,
+},
+
+cancelButton: {
+  flex: 1,
+  minHeight: 45,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: colors.border,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+cancelButtonText: {
+  color: colors.brown,
+  fontSize: 12,
+  fontWeight: '600',
+},
+
+saveAppointmentButton: {
+  flex: 1.3,
+  minHeight: 45,
+  borderRadius: 12,
+  backgroundColor: colors.terracotta,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+saveAppointmentText: {
+  color: colors.white,
+  fontSize: 12,
+  fontWeight: '600',
+},
 
 });

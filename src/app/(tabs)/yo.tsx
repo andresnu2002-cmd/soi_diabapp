@@ -7,6 +7,7 @@ import {
   Alert,
   Pressable,
   ScrollView,
+  TextInput,
   StyleSheet,
   Text,
   View,
@@ -37,12 +38,6 @@ const colors = {
 // DATOS DE EJEMPLO
 // ============================================
 
-const pregnancyData = {
-  currentWeek: 'Semana 24',
-  dueDate: 'Marzo 2025',
-  pregnancyType: 'Embarazo único',
-};
-
 const healthData = {
   condition: 'Diabetes gestacional',
   monitoring: 'No registrado',
@@ -50,8 +45,6 @@ const healthData = {
 
 const preferencesData = {
   reminders: 'Configurados · 4 activos',
-  notifications: 'Activadas',
-  privacy: 'Solo yo',
 };
 
 // ============================================
@@ -60,8 +53,28 @@ const preferencesData = {
 
 export default function YoScreen() {
 
-  const [deviceConnected, setDeviceConnected] =
-    useState(false);
+  const [deviceConnected, setDeviceConnected] = useState(false);
+  const [health, setHealth] = useState(healthData);
+  const [healthDraft, setHealthDraft] = useState(healthData);
+  const [editingHealth, setEditingHealth] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [privacyMode, setPrivacyMode] = useState<'private' | 'share'>('private');
+  const [editingPrivacy, setEditingPrivacy] = useState(false);
+
+  const startEditHealth = () => {
+    setHealthDraft({ ...health });
+    setEditingHealth(true);
+  };
+
+  const saveHealth = () => {
+    if (!healthDraft.condition.trim() || !healthDraft.monitoring.trim()) {
+      if (typeof window !== 'undefined') window.alert('Completa los dos campos de salud.');
+      else Alert.alert('Campos incompletos', 'Completa los dos campos de salud.');
+      return;
+    }
+    setHealth({ condition: healthDraft.condition.trim(), monitoring: healthDraft.monitoring.trim() });
+    setEditingHealth(false);
+  };
 
   // ============================================
   // FUNCIONES
@@ -72,30 +85,15 @@ export default function YoScreen() {
 };
 
   const handleReminders = () => {
-
-    Alert.alert(
-      'Recordatorios',
-      'Aquí podrás configurar tus recordatorios de mediciones, medicamentos y citas.'
-    );
-
-  };
+  router.push('/mis-recordatorios');
+};
 
   const handleNotifications = () => {
-
-    Alert.alert(
-      'Notificaciones',
-      'Aquí podrás administrar las notificaciones de S.O.I.'
-    );
-
+    setNotificationsEnabled(current => !current);
   };
 
   const handlePrivacy = () => {
-
-    Alert.alert(
-      'Privacidad',
-      'Tus datos personales y de salud permanecerán bajo tu control.'
-    );
-
+    setEditingPrivacy(current => !current);
   };
 
   const handleLogout = () => {
@@ -152,60 +150,6 @@ export default function YoScreen() {
       </View>
 
       {/* ===================================== */}
-      {/* MI EMBARAZO */}
-      {/* ===================================== */}
-
-      <View style={styles.sectionCard}>
-
-        <View style={styles.sectionHeader}>
-
-          <View style={styles.sectionIcon}>
-
-            <Ionicons
-              name="heart-outline"
-              size={19}
-              color={colors.white}
-            />
-
-          </View>
-
-          <Text style={styles.sectionTitle}>
-            Mi embarazo
-          </Text>
-
-          <Ionicons
-            name="chevron-forward"
-            size={17}
-            color={colors.brown}
-          />
-
-        </View>
-
-        {/* SEMANA ACTUAL */}
-
-        <InfoRow
-          label="Semana actual"
-          value={pregnancyData.currentWeek}
-        />
-
-        {/* FECHA ESTIMADA */}
-
-        <InfoRow
-          label="Fecha estimada de parto"
-          value={pregnancyData.dueDate}
-        />
-
-        {/* TIPO DE EMBARAZO */}
-
-        <InfoRow
-          label="Tipo de embarazo"
-          value={pregnancyData.pregnancyType}
-          last
-        />
-
-      </View>
-
-      {/* ===================================== */}
       {/* MI SALUD */}
       {/* ===================================== */}
 
@@ -226,19 +170,37 @@ export default function YoScreen() {
           <Text style={styles.sectionTitle}>
             Mi salud
           </Text>
+          <Pressable onPress={startEditHealth} style={styles.editIconButton} accessibilityLabel="Editar mi salud">
+            <Ionicons name="create-outline" size={19} color={colors.brown} />
+          </Pressable>
 
         </View>
 
-        <InfoRow
-          label="Condición principal"
-          value={healthData.condition}
-        />
-
-        <InfoRow
-          label="Monitoreo"
-          value={healthData.monitoring}
-          last
-        />
+        {editingHealth ? (
+          <View style={styles.editor}>
+            <Text style={styles.editorLabel}>Condición principal</Text>
+            <TextInput style={styles.editorInput} value={healthDraft.condition}
+              onChangeText={condition => setHealthDraft(current => ({ ...current, condition }))}
+              placeholder="Condición principal" placeholderTextColor={colors.muted} />
+            <Text style={styles.editorLabel}>Monitoreo</Text>
+            <TextInput style={styles.editorInput} value={healthDraft.monitoring}
+              onChangeText={monitoring => setHealthDraft(current => ({ ...current, monitoring }))}
+              placeholder="Tipo de monitoreo" placeholderTextColor={colors.muted} />
+            <View style={styles.editorActions}>
+              <Pressable style={styles.cancelButton} onPress={() => setEditingHealth(false)}>
+                <Text style={styles.cancelText}>Cancelar</Text>
+              </Pressable>
+              <Pressable style={styles.saveButton} onPress={saveHealth}>
+                <Text style={styles.saveText}>Guardar</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : (
+          <>
+            <InfoRow label="Condición principal" value={health.condition} />
+            <InfoRow label="Monitoreo" value={health.monitoring} last />
+          </>
+        )}
 
       </View>
 
@@ -349,9 +311,10 @@ export default function YoScreen() {
 
           </View>
 
-          <Text style={styles.preferenceValue}>
-            {preferencesData.notifications}
-          </Text>
+          <View style={styles.preferenceRight}>
+            <Text style={styles.preferenceValue}>{notificationsEnabled ? 'Activadas' : 'Desactivadas'}</Text>
+            <Ionicons name={notificationsEnabled ? 'toggle' : 'toggle-outline'} size={27} color={colors.terracotta} />
+          </View>
 
         </Pressable>
 
@@ -373,11 +336,27 @@ export default function YoScreen() {
 
           </View>
 
-          <Text style={styles.preferenceValue}>
-            {preferencesData.privacy}
-          </Text>
+          <View style={styles.preferenceRight}>
+            <Text style={styles.preferenceValue}>{privacyMode === 'private' ? 'Solo yo' : 'Compartir con alguien'}</Text>
+            <Ionicons name="create-outline" size={16} color={colors.terracotta} />
+          </View>
 
         </Pressable>
+
+        {editingPrivacy && (
+          <View style={styles.editor}>
+            <Text style={styles.editorLabel}>¿Quién puede ver mi información?</Text>
+            <Pressable style={styles.choiceRow} onPress={() => { setPrivacyMode('private'); setEditingPrivacy(false); }}>
+              <Ionicons name={privacyMode === 'private' ? 'radio-button-on' : 'radio-button-off'} size={19} color={colors.terracotta} />
+              <Text style={styles.choiceText}>Solo yo</Text>
+            </Pressable>
+            <Pressable style={styles.choiceRow} onPress={() => { setPrivacyMode('share'); setEditingPrivacy(false); }}>
+              <Ionicons name={privacyMode === 'share' ? 'radio-button-on' : 'radio-button-off'} size={19} color={colors.terracotta} />
+              <Text style={styles.choiceText}>Compartir con alguien</Text>
+            </Pressable>
+            <Text style={styles.privacyNotice}>Esta opción solo cambia tu preferencia visual. No comparte datos ni concede acceso a otra persona todavía.</Text>
+          </View>
+        )}
 
       </View>
 
@@ -645,5 +624,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 3,
   },
+
+  editIconButton: { padding: 8, minWidth: 40, alignItems: 'center', justifyContent: 'center' },
+  editor: { padding: 14, backgroundColor: colors.white },
+  editorLabel: { fontSize: 11, color: colors.brown, fontWeight: '600', marginBottom: 7 },
+  editorInput: { borderWidth: 1, borderColor: colors.border, borderRadius: 11, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44, marginBottom: 14, fontSize: 13, color: colors.brown, backgroundColor: '#FFFCF9' },
+  editorActions: { flexDirection: 'row', gap: 10 },
+  cancelButton: { flex: 1, borderRadius: 11, borderWidth: 1, borderColor: colors.border, minHeight: 43, alignItems: 'center', justifyContent: 'center' },
+  saveButton: { flex: 1, borderRadius: 11, backgroundColor: colors.terracotta, minHeight: 43, alignItems: 'center', justifyContent: 'center' },
+  cancelText: { fontSize: 12, fontWeight: '600', color: colors.brown },
+  saveText: { fontSize: 12, fontWeight: '600', color: colors.white },
+  preferenceRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  choiceRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 },
+  choiceText: { fontSize: 12, color: colors.brown },
+  privacyNotice: { fontSize: 10, lineHeight: 15, color: colors.textSecondary, marginTop: 9 },
 
 });
