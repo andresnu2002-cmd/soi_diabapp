@@ -1,13 +1,11 @@
 import { Stack } from 'expo-router';
 
 import { PregnancyProvider } from '@/app/context/PregnancyContext';
-
 import { MeasurementProvider } from '@/app/context/MeasurementContext';
-
 import { DailyRecordsProvider } from '@/app/context/DailyRecordsContext';
 
 // ============================================
-// ROOT LAYOUT
+// ROOT LAYOUT - S.O.I.
 // ============================================
 
 export default function RootLayout() {
@@ -19,10 +17,47 @@ export default function RootLayout() {
           <Stack
             screenOptions={{
               headerShown: false,
+              animation: 'slide_from_right',
             }}
           >
 
-            <Stack.Screen name="(tabs)" />
+            {/* ================================= */}
+            {/* PANTALLA DE ENTRADA */}
+            {/* ================================= */}
+
+            <Stack.Screen
+              name="index"
+              options={{
+                headerShown: false,
+              }}
+            />
+
+            {/* ================================= */}
+            {/* ONBOARDING - 8 PASOS */}
+            {/* ================================= */}
+
+            <Stack.Screen
+              name="onboarding"
+              options={{
+                headerShown: false,
+                gestureEnabled: false,
+              }}
+            />
+
+            {/* ================================= */}
+            {/* NAVEGACIÓN PRINCIPAL */}
+            {/* ================================= */}
+
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                headerShown: false,
+              }}
+            />
+
+            {/* ================================= */}
+            {/* REGISTROS */}
+            {/* ================================= */}
 
             <Stack.Screen
               name="registrar-bienestar"
@@ -31,6 +66,10 @@ export default function RootLayout() {
               }}
             />
 
+            {/* ================================= */}
+            {/* PERSONALIZACIÓN S.O.I. */}
+            {/* ================================= */}
+
             <Stack.Screen
               name="personalizar-soi"
               options={{
@@ -38,12 +77,20 @@ export default function RootLayout() {
               }}
             />
 
+            {/* ================================= */}
+            {/* EMBARAZO */}
+            {/* ================================= */}
+
             <Stack.Screen
               name="mi-embarazo"
               options={{
                 headerShown: false,
               }}
             />
+
+            {/* ================================= */}
+            {/* DISPOSITIVO */}
+            {/* ================================= */}
 
             <Stack.Screen
               name="mi-dispositivo"
