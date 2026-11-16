@@ -25,10 +25,8 @@ const welcomeImage = {
 export default function OnboardingScreen() {
 
   const handleContinue = () => {
-    // Temporalmente abrimos Inicio.
-    // Después conectaremos aquí el paso 1/8.
-    router.replace('/(tabs)');
-  };
+  router.push('/onboarding/sobre-ti');
+};
 
   return (
     <ImageBackground
