@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import {
   Alert,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -107,18 +108,25 @@ const personalities = [
     description: 'Hoy necesito un abrazo',
     meaning: 'Empática y emocional.',
   },
-  {
-    id: 'decidida',
-    name: 'Decidida',
-    description: 'Yo puedo',
-    meaning: 'Fuerte y perseverante.',
-  },
+
 ];
 
 // ============================================
-// CARITA S.O.I.
-// Representación temporal con expresiones
+// IMÁGENES OFICIALES DE PERSONALIDADES S.O.I.
 // ============================================
+
+const faceImages: Record<string, string> = {
+  sonadora: 'https://res.cloudinary.com/dcwt59fom/image/upload/v1794876417/mariasoi/Sonadora_xt9zfn.png',
+  serena: 'https://res.cloudinary.com/dcwt59fom/image/upload/v1794876416/mariasoi/Serena_p0jkag.png',
+  sensible: 'https://res.cloudinary.com/dcwt59fom/image/upload/v1794876415/mariasoi/sensible_f9jvfy.png',
+  rebelde: 'https://res.cloudinary.com/dcwt59fom/image/upload/v1794876414/mariasoi/Rebelde_icwmb0.png',
+  curiosa: 'https://res.cloudinary.com/dcwt59fom/image/upload/v1794876413/mariasoi/Curiosa_e7bmxc.png',
+  coqueta: 'https://res.cloudinary.com/dcwt59fom/image/upload/v1794876412/mariasoi/coqueta_e6wpmt.png',
+  amorosa: 'https://res.cloudinary.com/dcwt59fom/image/upload/v1794876412/mariasoi/amorosa_ac4fmr.png',
+};
+
+const addMoreImage =
+  'https://res.cloudinary.com/dcwt59fom/image/upload/v1794876411/mariasoi/agregarmaas_rxqpb9.png';
 
 function SOIFace({
   personality,
@@ -127,76 +135,13 @@ function SOIFace({
   personality: string;
   size?: number;
 }) {
-  const expressions: Record<
-    string,
-    { eyes: string; mouth: string }
-  > = {
-    serena: {
-      eyes: '⌣  ⌣',
-      mouth: 'ᴗ',
-    },
-    curiosa: {
-      eyes: '◕  ◕',
-      mouth: 'ᴗ',
-    },
-    coqueta: {
-      eyes: '◕  ⌣',
-      mouth: 'ᴗ',
-    },
-    rebelde: {
-      eyes: '⌐  ⌐',
-      mouth: '⌣',
-    },
-    amorosa: {
-      eyes: '♡  ♡',
-      mouth: 'ᴗ',
-    },
-    sonadora: {
-      eyes: '◡  ◡',
-      mouth: 'ᴗ',
-    },
-    sensible: {
-      eyes: '﹀  ﹀',
-      mouth: '﹏',
-    },
-    decidida: {
-      eyes: '•  •',
-      mouth: '⌣',
-    },
-  };
-
-  const expression =
-    expressions[personality] ?? expressions.serena;
-
   return (
-    <View
-      style={[
-        styles.face,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-        },
-      ]}
-    >
-      <Text
-        style={[
-          styles.faceEyes,
-          { fontSize: size * 0.23 },
-        ]}
-      >
-        {expression.eyes}
-      </Text>
-
-      <Text
-        style={[
-          styles.faceMouth,
-          { fontSize: size * 0.22 },
-        ]}
-      >
-        {expression.mouth}
-      </Text>
-    </View>
+    <Image
+      source={{ uri: faceImages[personality] ?? faceImages.serena }}
+      style={{ width: size, height: size, marginBottom: 7 }}
+      resizeMode="contain"
+      accessibilityLabel={`Expresión S.O.I.: ${personality}`}
+    />
   );
 }
 
@@ -411,6 +356,26 @@ export default function PersonalizarSOI() {
             </Pressable>
           );
         })}
+
+        {/* SÍMBOLO PARA FUTURAS PERSONALIDADES */}
+        <Pressable
+          style={styles.personalityCard}
+          onPress={() =>
+            Alert.alert(
+              'Más expresiones',
+              'Próximamente podrás descubrir nuevas expresiones para tu S.O.I.'
+            )
+          }
+        >
+          <Image
+            source={{ uri: addMoreImage }}
+            style={{ width: 66, height: 66, marginBottom: 7 }}
+            resizeMode="contain"
+            accessibilityLabel="Agregar más expresiones"
+          />
+          <Text style={styles.personalityName}>Más expresiones</Text>
+          <Text style={styles.personalityDescription}>Próximamente</Text>
+        </Pressable>
       </View>
 
       {/* RESUMEN DE PERSONALIDAD */}

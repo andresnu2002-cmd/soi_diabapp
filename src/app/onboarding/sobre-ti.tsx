@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { router } from 'expo-router';
+import { useEffect, useState } from 'react';import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -26,18 +25,78 @@ const colors = {
 export default function SobreTiScreen() {
   const [name, setName] = useState('');
   const [addPhoto, setAddPhoto] = useState(false);
+// ============================================
+// RECUPERAR NOMBRE GUARDADO
+// ============================================
 
-  const handleContinue = () => {
-  if (!name.trim()) {
+useEffect(() => {
+
+  const loadName = async () => {
+
+    try {
+
+      const savedName = await AsyncStorage.getItem(
+        '@soi_preferred_name'
+      );
+
+      if (savedName) {
+        setName(savedName);
+      }
+
+    } catch (error) {
+
+      console.error(
+        'Error recuperando el nombre:',
+        error
+      );
+
+    }
+
+  };
+
+  loadName();
+
+}, []);
+ // ============================================
+// GUARDAR NOMBRE Y CONTINUAR
+// ============================================
+
+const handleContinue = async () => {
+
+  const preferredName = name.trim();
+
+  if (!preferredName) {
     return;
   }
 
-  console.log('Nombre:', name);
-  console.log('Desea agregar foto:', addPhoto);
+  try {
 
-  router.push('/onboarding/tu-momento');
+    // Guardar nombre de la usuaria.
+    await AsyncStorage.setItem(
+      '@soi_preferred_name',
+      preferredName
+    );
+
+    console.log('Nombre guardado:', preferredName);
+
+    console.log(
+      'Desea agregar foto:',
+      addPhoto
+    );
+
+    // Continuar al paso 2/8.
+    router.push('/onboarding/tu-momento');
+
+  } catch (error) {
+
+    console.error(
+      'Error guardando el nombre:',
+      error
+    );
+
+  }
+
 };
-
   return (
     <KeyboardAvoidingView
       style={styles.container}

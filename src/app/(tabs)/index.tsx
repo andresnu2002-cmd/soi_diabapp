@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePregnancy } from '@/app/context/PregnancyContext';
 
 import {
@@ -61,7 +63,46 @@ export default function HomeScreen() {
 
   const [tasks, setTasks] = useState(initialTasks);
 
-  const { pregnancy } = usePregnancy();
+  const { pregnancy, pregnancyLoading } = usePregnancy();
+  const [preferredName, setPreferredName] = useState('');
+  const [lifeStage, setLifeStage] = useState<string | null>(null);
+  const [pregnancyNotSure, setPregnancyNotSure] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Recuperar datos cada vez que Inicio vuelve a estar visible.
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const loadProfile = async () => {
+        try {
+          const values = await AsyncStorage.multiGet([
+            '@soi_preferred_name',
+            '@soi_life_stage',
+            '@soi_pregnancy_not_sure',
+          ]);
+          if (!active) return;
+          const stored = Object.fromEntries(values);
+          setPreferredName((stored['@soi_preferred_name'] ?? '').trim());
+          setLifeStage(stored['@soi_life_stage'] ?? null);
+          setPregnancyNotSure(stored['@soi_pregnancy_not_sure'] === 'true');
+        } catch (error) {
+          console.error('Error cargando perfil de Inicio:', error);
+        } finally {
+          if (active) setProfileLoading(false);
+        }
+      };
+      void loadProfile();
+      return () => { active = false; };
+    }, [])
+  );
+
+  const now = new Date();
+  const currentDate = new Intl.DateTimeFormat('es-CO', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  }).format(now).toLocaleUpperCase('es-CO');
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Buenos días,' : hour < 19 ? 'Buenas tardes,' : 'Buenas noches,';
+  const isPregnant = lifeStage === 'pregnant';
 
   const completedTasks = tasks.filter(
     (task) => task.completed
@@ -93,15 +134,15 @@ export default function HomeScreen() {
         <View style={styles.headerText}>
 
           <Text style={styles.date}>
-            MIÉRCOLES, 20 DE MAYO
+            {currentDate}
           </Text>
 
           <Text style={styles.greeting}>
-            Buenos días,
+            {greeting}
           </Text>
 
           <Text style={styles.name}>
-            Sofía
+            {profileLoading ? '' : (preferredName || 'Bienvenida')}
           </Text>
 
           <Text style={styles.subtitle}>
@@ -141,26 +182,22 @@ export default function HomeScreen() {
       {/* MI EMBARAZO */}
       {/* ===================================== */}
 
-  <Pressable
-  style={styles.pregnancyCard}
-  onPress={() => router.push('/mi-embarazo')}
->
-
-  <Text style={styles.pregnancyLabel}>
-    MI EMBARAZO
-  </Text>
-
-  <Text style={styles.pregnancyText}>
-    Semana {pregnancy.weeks}, día {pregnancy.days}
-  </Text>
-
-  <Ionicons
-    name="chevron-forward"
-    size={17}
-    color={colors.brown}
-  />
-
-</Pressable>
+      {!profileLoading && isPregnant && (
+        <Pressable
+          style={styles.pregnancyCard}
+          onPress={() => router.push('/mi-embarazo')}
+        >
+          <Text style={styles.pregnancyLabel}>MI EMBARAZO</Text>
+          <Text style={styles.pregnancyText}>
+            {pregnancyNotSure
+              ? 'Semanas por confirmar'
+              : pregnancyLoading
+                ? 'Cargando información...'
+                : `Semana ${pregnancy.weeks}, día ${pregnancy.days}`}
+          </Text>
+          <Ionicons name="chevron-forward" size={17} color={colors.brown} />
+        </Pressable>
+      )}
 
       {/* ===================================== */}
       {/* MI ÚLTIMA MEDICIÓN */}
